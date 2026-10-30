@@ -24,26 +24,31 @@ from textforge import (
 
 ROOT = Path(__file__).resolve().parents[1]
 REFERENCE: dict[str, Any] = json.loads(
-    (ROOT / "tests/fixtures/processor_reference.json").read_text()
+    (ROOT / "tests/fixtures/processor_reference.json").read_text(encoding="utf-8")
 )
 
 
 def test_method_mapping_and_pinned_sources_are_current() -> None:
-    mapping = json.loads((ROOT / "docs/api-parity.json").read_text())
-    assert mapping["core_revision"] == (ROOT / "vendor/CORE_REVISION").read_text().strip()
+    mapping = json.loads((ROOT / "docs/api-parity.json").read_text(encoding="utf-8"))
+    assert (
+        mapping["core_revision"]
+        == (ROOT / "vendor/CORE_REVISION").read_text(encoding="utf-8").strip()
+    )
     assert REFERENCE["core_revision"] == mapping["core_revision"]
     for path, digest in mapping["source_sha256"].items():
         assert hashlib.sha256((ROOT / "vendor/textforge" / path).read_bytes()).hexdigest() == digest
-    source = (ROOT / "vendor/textforge/src/api/mod.rs").read_text()
+    source = (ROOT / "vendor/textforge/src/api/mod.rs").read_text(encoding="utf-8")
     builder = set(re.findall(r"^    fn (\w+)", source, re.MULTILINE)) | {"new", "build"}
-    source = (ROOT / "vendor/textforge/src/api/processor.rs").read_text()
+    source = (ROOT / "vendor/textforge/src/api/processor.rs").read_text(encoding="utf-8")
     trait = source.split("pub trait TextForgeProcessorMethods")[1].split("impl Default")[0]
     processor = set(re.findall(r"^    fn (\w+)", trait, re.MULTILINE)) | {"new", "create_pipeline"}
     source = (
         (ROOT / "vendor/textforge/src/api/processor/buffered.rs")
-        .read_text()
+        .read_text(encoding="utf-8")
         .split("impl TextForgeProcessor {")[1]
     )
+    processor |= set(re.findall(r"^    pub fn (\w+)", source, re.MULTILINE))
+    source = (ROOT / "vendor/textforge/src/api/processor/file_io.rs").read_text(encoding="utf-8")
     processor |= set(re.findall(r"^    pub fn (\w+)", source, re.MULTILINE))
     assert set(mapping["builder"]) == builder
     assert set(mapping["processor"]) == processor
@@ -158,3 +163,16 @@ def test_processor_results_and_errors_match_rust(tmp_path: Path) -> None:
         ).into_string()
 
     assert_reference("invalid_utf8", invalid_utf8)
+
+
+def test_public_facade_annotations_resolve_at_runtime() -> None:
+    import inspect
+    from typing import get_type_hints
+
+    for name in textforge.__all__:
+        value = getattr(textforge, name)
+        if not inspect.isclass(value):
+            continue
+        for method_name, method in inspect.getmembers(value, inspect.isfunction):
+            if not method_name.startswith("_"):
+                assert get_type_hints(method), f"Missing annotations on {name}.{method_name}"

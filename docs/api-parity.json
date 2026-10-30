@@ -8,7 +8,8 @@
     "src/api/portable/processor.rs": "06bf69357049b3a7c3f1a41201206b5f6186f32991bcbf8211668fd0f0b030bc",
     "src/api/portable/watchers.rs": "65b8279e7c5c8ffa9facfea5feb1823078dc70c33964cd5a39944e8641d3511a",
     "src/api/portable/buffered.rs": "c944747f76bad25bad7a7de5fa942fe064c24c52ecc9fbc502b60095ca064791",
-    "src/api/portable/path.rs": "6a7955fb4ab47942f8c8e3f5bcf3df866b017c4949609c6a4840ebe78b8c26c7"
+    "src/api/portable/path.rs": "6a7955fb4ab47942f8c8e3f5bcf3df866b017c4949609c6a4840ebe78b8c26c7",
+    "src/api/processor/file_io.rs": "22901e8fb128ffbea160226676e7762767b47026f0f37f9f6354aafd4f5a21ac"
   },
   "builder": {
     "add_to_beginning": "Pipeline.add_to_beginning",
@@ -89,6 +90,7 @@
     "process_all_with_watchers": "Processor.process_all_with_watchers",
     "process_batch": "Processor.process_batch",
     "process_batch_buffered": "Processor.process_batch_buffered",
+    "process_batch_in_pool": "Processor.process_batch_in_pool",
     "process_file": "Processor.process_file",
     "process_file_buffered": "Processor.process_file_buffered",
     "process_single": "Processor.process_single",

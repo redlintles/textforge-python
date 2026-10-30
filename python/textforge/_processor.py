@@ -5,7 +5,10 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 from types import TracebackType
-from typing import TYPE_CHECKING
+
+# Import the package object, not Pipeline during its definition: postponed
+# annotations remain resolvable by get_type_hints after package initialization.
+import textforge as _api
 
 from . import _native
 from ._arguments import _number
@@ -13,9 +16,6 @@ from ._buffers import BufferOptions, PortableBuffer
 from ._native import Instruction, TextForgeError
 from ._observers import Observers
 from ._paths import Path, _path
-
-if TYPE_CHECKING:
-    from . import Pipeline
 
 
 class BatchPool:
@@ -95,7 +95,7 @@ class Processor:
     def __init__(self) -> None:
         self._inner = _native.Processor()
 
-    def register(self, plan: Pipeline) -> str:
+    def register(self, plan: _api.Pipeline) -> str:
         """Validate and register a snapshot; the source plan stays reusable."""
         return self._inner.register(plan._lower())
 
@@ -158,7 +158,7 @@ class Processor:
         return self._inner.process_single_with_debug(instruction, input)
 
     def get_pipeline_from_file(self, path: Path) -> str:
-        """Import a textual pipeline, accepting str or a text PathLike."""
+        """Import a textual pipeline from any supported native path."""
         return self._inner.get_pipeline_from_file(_path(path))
 
     def write_pipeline_to_file(self, id: str, path: Path) -> None:
@@ -177,11 +177,9 @@ class Processor:
         """Transform a UTF-8 file; existing output follows core overwrite semantics."""
         self._inner.process_file(id, _path(input), _path(output))
 
-    def create_pipeline(self) -> Pipeline:
+    def create_pipeline(self) -> _api.Pipeline:
         """Create a reusable plan whose build() registers with this processor."""
-        from . import Pipeline
-
-        plan = Pipeline()
+        plan = _api.Pipeline()
         object.__setattr__(plan, "_processor", self)
         return plan
 

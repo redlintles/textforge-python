@@ -33,7 +33,8 @@ while executing native work, retaining PyO3's borrow guards. Conflicting concurr
 mutable use of one processor raises a borrow error rather than racing. Use one
 processor per mutable workflow, or share immutable compiled pipelines. Batch
 execution uses a caller-sized pool within the portable layer, preserving errors
-and result order. Currently a pool is created for each batch call.
+and result order. The convenience batch call creates a pool per call; BatchPool and
+process_batch_in_pool expose caller-owned reusable workers.
 
 The extension uses the CPython stable ABI starting at 3.10. The source distribution
 includes the Rust engine snapshot and Cargo.lock. It still needs Rust and access
@@ -56,17 +57,20 @@ regenerate the binding Cargo.lock, and run the entire check script and sdist
 rebuild. Review the resulting vendor diff as a core update. Never copy build
 outputs, a `.git` directory, private local files, or the nested binding itself.
 
-## Initial release scope
+## Complete portable surface
 
-Exposed: all four portable argument forms, immutable plans, blocks, containment
-groups, compiled execution, registry management, single/full/debug execution,
-typed/text snapshots, UTF-8 files, bytecode, parallel file tasks with ordered errors.
+The adapter exposes the current public builder/processor functionality through the
+portable API, including observers, buffers/spilling, binary streams, reusable
+worker pools, native paths and capability queries. Wheels enable bytecode,
+watchers and buffered; test_access remains test-only. See [the method mapping and
+parity contract](parity.md), [lifecycle rules](lifecycle.md), and the
+[compatibility matrix](compatibility.md).
 
-Not yet exposed: watcher/observer callbacks and reports, buffered/spilled objects,
-binary stream callbacks, reusable BatchPool objects, raw native paths, and
-`show_transforms` (use typed/list snapshots instead). These are extension work;
-the package does not claim complete portable API parity. Optional watchers and
-buffered core features are not enabled in distributed wheels. Bytecode is enabled.
+Native adaptation is split by responsibility: src/processor.rs delegates processor
+operations, paths.rs owns path/capability/pool adaptation, buffers.rs invokes binary
+stream hooks, and observers.rs invokes callbacks and exposes references to Python
+GC. The Python facade follows those module boundaries; __init__.py retains the
+explicit fluent builder and public exports.
 
 ## Builder conformance
 
@@ -85,5 +89,14 @@ tests, so stale fixtures fail instead of silently blessing changed behavior.
 The reference executable's `test-reference` feature enables the core's test_access
 solely to construct the typed inner token required by Rust's iter test. Those
 internal types are not public without test_access in the pinned core. Distributed
-wheels continue to enable only the production extension-module feature and the
-core bytecode feature; test helpers are not enabled in release packages.
+wheels enable the production extension-module feature and core bytecode, watchers
+and buffered features; test helpers are not enabled in release packages.
+
+
+## Processor conformance
+
+The separate processor_reference Rust executable covers successful results and
+all structured error fields. scripts/generate_processor_reference.py --check
+re-executes it and verifies the pinned revision and saved fixture. Production
+adapters never use this executable or test-only core internals. The API mapping
+also records source hashes so signature/behavior changes force a parity review.

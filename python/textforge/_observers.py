@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from threading import get_ident
+from threading import current_thread
 
 from . import _native
 from ._native import Observation
@@ -25,10 +25,10 @@ class Observers:
 
     def __init__(self) -> None:
         self._inner = _native.Observers()
-        self._owner = get_ident()
+        self._owner = current_thread()
 
     def _check_thread(self) -> None:
-        if get_ident() != self._owner:
+        if current_thread() is not self._owner:
             raise RuntimeError("Observers must be used on their creating thread")
 
     def set(self, name: str, callback: Callable[[Observation], str]) -> None:

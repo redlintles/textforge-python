@@ -56,17 +56,22 @@ def main() -> None:
             }
     fixture = (
         json.dumps(
-            {"core_revision": (ROOT / "vendor/CORE_REVISION").read_text().strip(), "cases": rows},
+            {
+                "core_revision": (ROOT / "vendor/CORE_REVISION")
+                .read_text(encoding="utf-8")
+                .strip(),
+                "cases": rows,
+            },
             ensure_ascii=False,
             indent=2,
         )
         + "\n"
     )
     if args.check:
-        if FIXTURE.read_text() != fixture:
+        if FIXTURE.read_text(encoding="utf-8") != fixture:
             raise SystemExit("Processor reference changed; review before regenerating")
     else:
-        FIXTURE.write_text(fixture)
+        FIXTURE.write_text(fixture, encoding="utf-8")
     print(f"Verified {len(rows)} independent processor reference cases")
 
 

@@ -16,7 +16,11 @@ assert Pipeline().iter(2, Pipeline().add_to_end("!")).compile()("é") == "é!!"
 
 The terminal `compile()` returns an independent `CompiledPipeline`. Register a
 plan with `Processor.register(plan)` when you need IDs, files or batch processing.
-Unlike Rust's borrowing builder, Python plans are independent of processors.
+Unlike Rust's borrowing builder, Python plans do not keep a native mutable borrow.
+`processor.create_pipeline()` returns a reusable immutable plan retaining that
+processor; its terminal `build()` validates/registers and returns an ID. A
+standalone `Pipeline` can use `build(processor)`. `push_token(Instruction(...))`
+accepts an owned description corresponding to Rust's generic push_token.
 
 | Method | Parameters |
 | --- | --- |

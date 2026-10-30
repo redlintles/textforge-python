@@ -4,8 +4,8 @@ Typed Python bindings for [TextForge](https://github.com/redlintles/textforge),
 implemented with PyO3 against its owned portable API. Distribution name:
 `textforgers`; Python import: `textforge`. Requires Python 3.10 or newer.
 
-This repository prepares the first Python release; it has not been published yet.
-Once published, installation is `pip install textforgers`. Do not install the
+For a published release, use `pip install textforgers`; to build this checkout,
+use the commands below. Do not install the
 unrelated `textforge` distribution as a substitute.
 
 ```python
@@ -121,9 +121,11 @@ restored_bytecode = processor.read_from_bytecode_file(bytecode)
 The implementation uses the actual core extensions `.textforge` and
 `.textforgebc`. Some older project notes mention `.tft`/`.tfb`; those are not the
 current core's export/import contract. Text and input documents are UTF-8.
-Paths accept strings and `os.PathLike[str]` (`pathlib.Path`), with Unicode names.
-The initial adapter accepts Unicode-encodable path strings; native byte paths and
-surrogate-containing paths are not exposed yet.
+Paths accept `FilePath`, strings, bytes and `os.PathLike` values, preserving
+Unix byte names and Windows UTF-16 names. Unix surrogateescape and Windows
+surrogatepass conversion avoid replacing unrepresentable characters. Explicit
+`FilePath.from_native_bytes` and `from_windows_wide` reject the other OS
+representation rather than converting it with loss.
 
 `process_file(identifier, input, output)` creates or overwrites an output document.
 `process_batch([(input, identifier, output), ...], threads=0)` runs file tasks in
@@ -137,8 +139,7 @@ PEP 561 annotations and [architecture](docs/architecture.md).
 
 ## Build and check
 
-A Rust toolchain supporting edition 2024 and a Python development environment are
-required for source builds. Published wheels will not require Rust.
+Rust 1.89 or newer and a Python development environment are required for source builds. Published wheels will not require Rust.
 
 ```sh
 python3 -m venv .venv
@@ -148,6 +149,7 @@ pip install --group dev
 maturin build --locked --out dist
 pip install --force-reinstall --no-deps --no-index --find-links dist textforgers
 python scripts/check.py
+python scripts/check_distribution.py --wheel-dir dist --types
 maturin build --release --locked --sdist --out dist
 python -m twine check dist/*
 ```
@@ -163,5 +165,47 @@ wheel platforms, trusted publishing, source-package verification, and the steps
 that require the maintainer's PyPI account.
 
 See [development record](docs/development.md) for implemented coverage, validation,
-remaining portable capabilities, and how to resume development. GPLv3 license
+the implementation history, and how to resume development. GPLv3 license
 text is preserved from the core in `LICENSE` and `vendor/textforge/LICENSE`.
+
+
+## Observers, buffers and worker pools
+
+```python
+from tempfile import TemporaryDirectory
+from pathlib import Path
+from textforge import BufferOptions, Observers, PortableBuffer, Processor, features
+
+processor = Processor()
+id = processor.create_pipeline().add_to_end("!").build()
+assert features().watchers and features().buffered
+with TemporaryDirectory() as directory:
+    options = BufferOptions(memory_threshold=1, spill_directory=directory)
+    source = PortableBuffer.from_text("é", options)
+    with processor.process_all_buffered(id, source) as result:
+        assert source.closed
+        assert result.into_string() == "é!"
+    observers = Observers()
+    observers.set_builtin("size", "current_len_chars")
+    observers.schedule_all("size")
+    assert processor.process_all_with_watchers(
+        id, "é", observers, Path(directory) / "report.json"
+    ) == "é!"
+```
+
+Custom observers accept `(Observation) -> str`; callback exceptions become
+structured callback-stage errors. `PortableBuffer.from_reader` and `copy_to` use
+borrowed synchronous binary streams and preserve partial reads/writes. Buffers
+support ranged byte reads, spill inspection, file export and explicit consuming
+`into_string`. Buffered processing consumes its input on success or failure.
+Spill thresholds are placement choices, not hard process memory limits.
+
+Use `with BatchPool(2) as pool` and
+`processor.process_batch_in_pool(pool, tasks)` to reuse workers. Tasks can be
+`FileTask(input, pipeline_id, output)` records or the existing tuples.
+`process_batch_buffered([BufferTask(pipeline_id, input)], options)` returns one
+owned buffer or TextForgeError per task.
+
+See [API parity](docs/parity.md), [ownership and concurrency](docs/lifecycle.md),
+and [supported configurations](docs/compatibility.md). All fourteen binding rules
+and their evidence are tracked in [the compliance record](docs/compliance.md).

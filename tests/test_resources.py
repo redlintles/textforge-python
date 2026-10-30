@@ -100,6 +100,9 @@ def test_buffered_processor_methods_and_failure_consumption(tmp_path: Path) -> N
     id = processor.create_pipeline().add_to_end("!").build()
     source = PortableBuffer.from_text("é", options)
     alias = source
+    with pytest.raises(TypeError):
+        processor.process_all_buffered(1, source)  # type: ignore[arg-type]
+    assert not source.closed  # Signature checks happen before ownership transfer.
     result = processor.process_all_buffered(id, source)
     assert alias.closed
     assert result.into_string() == "é!"
@@ -225,16 +228,16 @@ def test_observation_context_replacement_and_reset(tmp_path: Path) -> None:
         ("x", "🍌x", "🍌xé"),
         ("🍌x", "🍌xé", None),
     ]
-    assert json.loads(report.read_text()) == [
+    assert json.loads(report.read_text(encoding="utf-8")) == [
         {"capture": "🍌x", "size": "2"},
         {"capture": "🍌xé", "size": "3"},
     ]
     observers.write_report(tmp_path / "reset.json")
-    assert json.loads((tmp_path / "reset.json").read_text()) == []
+    assert json.loads((tmp_path / "reset.json").read_text(encoding="utf-8")) == []
     observers.set_builtin("capture", "word_count")
     observers.run(Observation("hello world", "", None, "manual"))
     observers.write_report(report)
-    assert json.loads(report.read_text()) == [{"capture": "2", "size": "11"}]
+    assert json.loads(report.read_text(encoding="utf-8")) == [{"capture": "2", "size": "11"}]
     assert "word_count" in observers.builtin_names()
     observers.reset()
     observers.clear()
@@ -264,7 +267,7 @@ def test_callback_exception_preserves_report_and_releases_registration(tmp_path:
         processor.process_all_with_watchers(id, "é", observers, report)
     assert raised.value.stage == "callback" and raised.value.code == 27
     assert "ValueError: boom" in raised.value.message
-    assert report.read_text() == "unchanged"
+    assert report.read_text(encoding="utf-8") == "unchanged"
     observers.clear()
     gc.collect()
     assert ref() is None

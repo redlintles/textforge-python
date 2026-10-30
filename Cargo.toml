@@ -2,6 +2,7 @@
 name = "textforgers"
 version = "0.1.1"
 edition = "2024"
+rust-version = "1.89"
 description = "Typed Python bindings for the TextForge text-processing DSL"
 license = "GPL-3.0-only"
 repository = "https://github.com/redlintles/textforge-python"

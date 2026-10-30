@@ -1,14 +1,15 @@
 # Release procedure
 
 Nothing in the implementation work publishes a package, pushes Git, or changes
-existing versions. The distribution starts with the pre-existing binding crate
-version 0.1.0. The core remains 0.1.9. A maintainer must approve future version
-changes and actual publication according to the main project's AGENTS.md.
+existing versions. The current binding version is 0.1.1. The core remains 0.1.9.
+A maintainer must approve future version changes and actual publication according to the main project's AGENTS.md.
 
 1. Verify availability/ownership of `textforgers` on PyPI and TestPyPI.
    The package imports as `textforge`. Avoid installing another distribution that
    supplies that same import into the same environment.
-2. Run the full quality script against an installed wheel. Build a release wheel
+2. Run the full quality script against an installed wheel. Run
+   `python scripts/check_distribution.py --wheel-dir dist --types` to verify
+   the installed metadata and an external typed consumer. Build a release wheel
    and sdist with `maturin build --release --locked --sdist --out dist`.
    Run `python -m twine check dist/*`.
 3. Unpack the sdist in a new directory outside both repositories. Run
@@ -17,8 +18,8 @@ changes and actual publication according to the main project's AGENTS.md.
    `_native.pyi`, and `py.typed` are present in the wheel. Cargo may need network
    access for third-party dependencies; the TextForge checkout is not needed.
 4. Review the wheels built by GitHub Actions. CI covers Linux x86_64, Windows
-   x86_64 and macOS arm64; it tests Python 3.10, 3.12, and 3.14 on Linux. Other
-   platforms can build from source; do not claim them as tested wheel targets.
+   x86_64 and macOS arm64; it configures Python 3.10 through 3.14 on each wheel
+   platform. Other platforms can build from source; do not claim them as tested wheel targets.
 5. Configure GitHub environments named `testpypi` and `pypi`, with required
    maintainer reviewers. Create trusted publishers on each index for owner
    `redlintles`, repository `textforge-python`, workflow `ci.yml`, and the matching

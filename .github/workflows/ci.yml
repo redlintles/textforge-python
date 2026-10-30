@@ -29,6 +29,7 @@ jobs:
       - run: maturin build --locked --out dist
       - run: python -m pip install --no-index --find-links dist textforgers
       - run: python scripts/check.py
+      - run: python scripts/check_distribution.py --wheel-dir dist --types
 
   wheels:
     strategy:
@@ -49,17 +50,19 @@ jobs:
       - run: python -m pip install pytest
       - run: python -m pip install --no-index --find-links dist textforgers
       - run: python -m pytest
+      - run: python scripts/check_distribution.py --wheel-dir dist
       - uses: actions/upload-artifact@v4
         with:
           name: wheels-${{ matrix.os }}
           path: dist/*.whl
 
   python-versions:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     needs: wheels
     strategy:
       matrix:
-        python: ["3.12", "3.14"]
+        os: [ubuntu-latest, windows-latest, macos-14]
+        python: ["3.11", "3.12", "3.13", "3.14"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -67,11 +70,12 @@ jobs:
           python-version: ${{ matrix.python }}
       - uses: actions/download-artifact@v4
         with:
-          name: wheels-ubuntu-latest
+          name: wheels-${{ matrix.os }}
           path: dist
       - run: python -m pip install pytest
       - run: python -m pip install --no-index --find-links dist textforgers
       - run: python -m pytest
+      - run: python scripts/check_distribution.py --wheel-dir dist
 
   sdist:
     runs-on: ubuntu-latest
@@ -93,14 +97,22 @@ jobs:
           maturin build --release --locked --out wheels
           python -m pip install --no-index --find-links wheels textforgers
           python -m pytest
+          python scripts/check_distribution.py --wheel-dir wheels
       - uses: actions/upload-artifact@v4
         with:
           name: sdist
           path: dist/*.tar.gz
 
+  minimum-rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.89.0
+      - run: cargo check --all-targets --locked
+
   publish:
     if: github.event_name == 'workflow_dispatch' && inputs.destination != 'none'
-    needs: [quality, wheels, python-versions, sdist]
+    needs: [quality, wheels, python-versions, sdist, minimum-rust]
     runs-on: ubuntu-latest
     environment: ${{ inputs.destination }}
     permissions:

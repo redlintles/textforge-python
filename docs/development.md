@@ -58,9 +58,10 @@ No Git push, PyPI upload, crates.io publishing, version bump or account change
 was performed. Actual releases need the maintainer's package-name ownership,
 trusted-publisher configuration and approval described in releasing.md.
 
-## Next work
+## Historical follow-up list (superseded by the parity update)
 
-The current release scope is deliberately explicit in architecture.md. Resume
+The following was the initial release follow-up list. Its API gaps are now
+implemented; see the current parity update below. Originally, the next steps were to resume
 portable parity work here, without rewriting the core API:
 
 1. Watchers: wrap Observers/Observation, typed JSON results, built-in metrics and
@@ -117,3 +118,33 @@ the test-only Rust oracle and its clippy check, and the full vendored core
 pre-commit checklist. Release wheel/sdist metadata and an external source rebuild
 were verified. Production wheels were checked to exclude core test_access.
 No version change, Git push or publication was performed.
+
+
+## 2026-10-30: complete portable parity
+
+The maintainer explicitly approved bringing the Python binding into compliance
+with AGENTS.md section 17. Added all missing processor capabilities, watchers and
+reports, owned buffers/spilling and binary stream hooks, reusable batch pools,
+lossless native paths and capability discovery. create_pipeline/build/push_token
+complete the builder/registration workflow. Existing fluent and mnemonic APIs are
+preserved; no core snapshot, dependency, package version or license was changed.
+Enabling existing production watchers/buffered features does not enable test_access.
+
+Focused Python/Rust modules keep runtime invocation and value conversion in the
+adapter. The engine still owns domain validation, scheduling, file semantics and
+execution. Native observer GC traversal supports callback cycles. Explicit buffer
+consumption/close, pool close, thread confinement, re-entrancy and mutable borrow
+rules are documented and tested, including failure cleanup.
+
+The pinned method map/source hashes cover every core builder/processor and
+portable entry point. The existing 61-case fluent Rust oracle is complemented by
+19 independent processor cases, including complete structured errors. See
+parity.md, compatibility.md, lifecycle.md and compliance.md for current contracts
+and evidence. Historical feature omissions above no longer describe the binding.
+
+The distribution validator checks installed resources, native capabilities and
+wheel files, and type-checks a consumer outside the checkout. CI tests CPython
+3.10–3.14 across the three wheel platforms and rebuilds an sdist outside checkout;
+its execution status must still be checked before release. Local validation is
+Linux x86_64 / CPython 3.12. No push, publication or version bump is part of this
+update. Future binding changes require the maintainer's approval.
