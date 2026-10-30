@@ -26,3 +26,9 @@ After a reviewed core refresh, update the revision marker, API mapping/hashes,
 reference fixtures and this matrix together. Regenerate Cargo.lock only when the
 reviewed dependency graph changes. Test all supported runtime/platform pairs
 before publishing; unsupported targets must remain labeled as unverified.
+
+
+Unix native byte-path conversion is tested independently of filesystem naming
+rules. A filesystem may reject a non-UTF-8 filename with EILSEQ; only that file-I/O
+case is then skipped. The representation/round-trip checks still run, and other
+I/O errors remain test failures. Windows native-wide checks remain platform-gated.

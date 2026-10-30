@@ -1,0 +1,2 @@
+# Keep textual sources and parity fixtures identical across Git checkouts.
+* text=auto eol=lf

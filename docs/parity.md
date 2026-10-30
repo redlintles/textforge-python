@@ -3,7 +3,9 @@
 The machine-readable mapping in `api-parity.json` covers every current public
 builder and processor method and every portable processor, buffer, observer and
 path method. Tests compare method names, the core revision and source hashes,
-and verify the named Python entry points exist. After an approved core update,
+and verify the named Python entry points exist. Source hashes canonicalize CRLF to
+LF only; all other bytes remain significant. Text checkouts use LF through
+.gitattributes, and a regression verifies that real source edits still fail. After an approved core update,
 review each changed signature/behavior, update the mapping and hashes, regenerate
 both Rust reference fixtures, and run `scripts/check.py`. Do not refresh fixtures
 to hide an adapter failure.

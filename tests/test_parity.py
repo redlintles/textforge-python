@@ -28,6 +28,22 @@ REFERENCE: dict[str, Any] = json.loads(
 )
 
 
+def _source_digest(path: Path) -> str:
+    """Hash canonical LF bytes, preserving every other source byte."""
+    return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+
+
+def test_source_digest_ignores_checkout_eol_but_detects_source_edits(tmp_path: Path) -> None:
+    source = tmp_path / "source.rs"
+    original = "// Unicode é🍌\nfn example() { let value = 1; }\n".encode()
+    expected = hashlib.sha256(original).hexdigest()
+    for newline in (b"\n", b"\r\n"):
+        source.write_bytes(original.replace(b"\n", newline))
+        assert _source_digest(source) == expected
+        source.write_bytes(source.read_bytes().replace(b"value = 1", b"value = 2"))
+        assert _source_digest(source) != expected
+
+
 def test_method_mapping_and_pinned_sources_are_current() -> None:
     mapping = json.loads((ROOT / "docs/api-parity.json").read_text(encoding="utf-8"))
     assert (
@@ -36,7 +52,7 @@ def test_method_mapping_and_pinned_sources_are_current() -> None:
     )
     assert REFERENCE["core_revision"] == mapping["core_revision"]
     for path, digest in mapping["source_sha256"].items():
-        assert hashlib.sha256((ROOT / "vendor/textforge" / path).read_bytes()).hexdigest() == digest
+        assert _source_digest(ROOT / "vendor/textforge" / path) == digest, path
     source = (ROOT / "vendor/textforge/src/api/mod.rs").read_text(encoding="utf-8")
     builder = set(re.findall(r"^    fn (\w+)", source, re.MULTILINE)) | {"new", "build"}
     source = (ROOT / "vendor/textforge/src/api/processor.rs").read_text(encoding="utf-8")

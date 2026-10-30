@@ -130,7 +130,9 @@ Paths accept `FilePath`, strings, bytes and `os.PathLike` values, preserving
 Unix byte names and Windows UTF-16 names. Unix surrogateescape and Windows
 surrogatepass conversion avoid replacing unrepresentable characters. Explicit
 `FilePath.from_native_bytes` and `from_windows_wide` reject the other OS
-representation rather than converting it with loss.
+representation rather than converting it with loss. These conversions preserve
+path values; the underlying filesystem may still reject a particular filename
+(for example, a non-UTF-8 byte name on macOS).
 
 `process_file(identifier, input, output)` creates or overwrites an output document.
 `process_batch([(input, identifier, output), ...], threads=0)` runs file tasks in

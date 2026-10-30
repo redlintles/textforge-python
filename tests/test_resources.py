@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import errno
 import gc
 import io
 import json
@@ -9,6 +10,7 @@ import os
 import weakref
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import NoReturn
 
 import pytest
 from textforge import (
@@ -326,14 +328,60 @@ def test_buffer_reentrancy_is_rejected() -> None:
     assert buffer.into_string() == "é"
 
 
-@pytest.mark.skipif(os.name == "nt", reason="Unix byte path representation")
-def test_non_utf8_paths_and_surrogateescape(tmp_path: Path) -> None:
-    raw = os.fsencode(tmp_path) + b"/nonutf8-\xff.txt"
-    with open(raw, "wb") as file:
+def _create_non_utf8_input(path: bytes) -> None:
+    """Probe the filesystem only; EILSEQ means this filename is unsupported."""
+    try:
+        file = open(path, "wb")
+    except OSError as error:
+        if error.errno == errno.EILSEQ:
+            pytest.skip("filesystem rejects non-UTF-8 filenames (EILSEQ)")
+        raise
+    with file:
         file.write("é".encode())
+
+
+def test_non_utf8_probe_skips_only_encoding_rejection(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def reject(path: bytes, mode: str) -> NoReturn:
+        raise OSError(errno.EILSEQ, "Illegal byte sequence", path)
+
+    with monkeypatch.context() as patch:
+        patch.setattr("builtins.open", reject)
+        with pytest.raises(pytest.skip.Exception, match="filesystem rejects non-UTF-8"):
+            _create_non_utf8_input(b"nonutf8-\xff.txt")
+
+
+def test_non_utf8_probe_preserves_other_io_errors(monkeypatch: pytest.MonkeyPatch) -> None:
+    failure = PermissionError(errno.EACCES, "Permission denied")
+
+    def reject(path: bytes, mode: str) -> NoReturn:
+        raise failure
+
+    with monkeypatch.context() as patch:
+        patch.setattr("builtins.open", reject)
+        with pytest.raises(PermissionError) as raised:
+            _create_non_utf8_input(b"nonutf8-\xff.txt")
+    assert raised.value is failure
+
+
+@pytest.mark.skipif(os.name == "nt", reason="Unix byte path representation")
+def test_unix_native_path_representation() -> None:
+    # This conversion is valid even when a filesystem cannot create such a name.
+    raw = b"nonutf8-\xff.txt"
     native = FilePath.from_native_bytes(raw)
     assert native.to_text() is None
     assert native.to_native_bytes() == raw
+    with pytest.raises(TextForgeError) as raised:
+        FilePath.from_windows_wide([65])
+    assert raised.value.stage == "conversion"
+
+
+@pytest.mark.skipif(os.name == "nt", reason="Unix byte path representation")
+def test_non_utf8_paths_and_surrogateescape(tmp_path: Path) -> None:
+    raw = os.fsencode(tmp_path) + b"/nonutf8-\xff.txt"
+    _create_non_utf8_input(raw)
+    native = FilePath.from_native_bytes(raw)
     assert PortableBuffer.from_file(os.fsdecode(raw)).into_string() == "é"
     processor = Processor()
     id = processor.create_pipeline().add_to_end("!").build()
@@ -341,9 +389,6 @@ def test_non_utf8_paths_and_surrogateescape(tmp_path: Path) -> None:
     processor.process_file(id, native, output)
     with open(output, "rb") as file:
         assert file.read().decode() == "é!"
-    with pytest.raises(TextForgeError) as raised:
-        FilePath.from_windows_wide([65])
-    assert raised.value.stage == "conversion"
 
 
 @pytest.mark.skipif(os.name != "nt", reason="Windows native wide path representation")

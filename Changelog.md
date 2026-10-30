@@ -19,6 +19,15 @@ Git history only establishes a version change, not an uploaded release.
 - Wheel metadata/version checks that reject stale or unrelated distribution
   files, plus verification of typing resources and an external typed consumer.
 
+### Fixed
+
+- Canonicalize CRLF to LF when checking pinned source hashes and enforce LF
+  checkouts for text files, preventing Windows newline conversion from reporting
+  a false source-integrity failure. Other source changes still fail the check.
+- Separate Unix native-byte path representation tests from filesystem I/O. Skip
+  only the filename-creation probe when a filesystem rejects non-UTF-8 names with
+  EILSEQ (as on the macOS runner); preserve other errors and conversion coverage.
+
 ### Changed
 
 - Raise copied core dependency requirements to the verified stable versions:
