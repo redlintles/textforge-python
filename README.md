@@ -9,24 +9,24 @@ Once published, installation is `pip install textforgers`. Do not install the
 unrelated `textforge` distribution as a substitute.
 
 ```python
-from textforge import Pipeline, Processor, Instruction, Variable
+from textforge import Pipeline, Processor, get_var
 
-plan = Pipeline().add("tbs").add("atb", "🍌 ").add("ate", "!")
+plan = Pipeline().trim_both_sides().add_to_beginning("🍌 ").add_to_end("!")
 pipeline = plan.compile()
 assert pipeline.process(" é ") == "🍌 é!"
 assert pipeline("fruit") == "🍌 fruit!"
 
 # Edits return a new plan. Both the source and compiled pipelines stay reusable.
 assert Pipeline().compile()("unchanged") == "unchanged"
-repeated = Pipeline().add("iter", 2, Instruction("ate", "!"))
+repeated = Pipeline().iter(2, Pipeline().add_to_end("!"))
 assert repeated.compile()("é") == "é!!"
 
 # Arguments omit DSL syntax words (assoc, do, times).
-variables = Pipeline().add("val", "n", "2").add("rpt", Variable("n"))
+variables = Pipeline().val("n", 2).repeat(get_var("n"))
 assert variables.compile()("é") == "éé"
 
-body = Pipeline().add("ate", "!")
-blocks = Pipeline().block("greeting", body).call_block("greeting")
+body = Pipeline().add_to_end("!")
+blocks = Pipeline().block_assoc("greeting", body).call_block("greeting")
 assert blocks.compile()("hello") == "hello!"
 
 processor = Processor()
@@ -34,12 +34,63 @@ identifier = processor.register(plan)
 assert processor.process_all(identifier, " é ") == "🍌 é!"
 ```
 
-`Pipeline.contains_each(pattern, body)` checks containment before **each** child,
-including after preceding children modify the text. Blocks and conditionals follow
-the core's hierarchy validation. Strings keep the core's `{{variable}}` and
-`[[ expression ]]` interpolation semantics. Numeric arguments are unsigned 64-bit
-integers, further checked against the target's native size by the portable API.
-Booleans, floats, negative integers and unsupported argument objects are rejected.
+The primary construction API follows Rust's `TextForgeBuilderMethods`,
+`TextForgeBlockMethods` and `TextForgeConditionalMethods`: every operation is a
+real method with an explicit signature, parameter names, documentation and type
+annotations. For example:
+
+```python
+from textforge import Pipeline, get_var
+
+pipeline = (
+    Pipeline()
+    .add_to_beginning("banana")
+    .delete_first()
+    .replace_all_with(pattern="a", text_to_replace="A")
+    .add_to_end("!")
+    .compile()
+)
+assert pipeline("é") == "AnAnAé!"
+
+# Rust's variable helpers normalize literal numbers to text automatically.
+assert Pipeline().val("count", 2).repeat(get_var("count")).compile()("é") == "éé"
+
+# A callback receives a fresh immutable plan and returns its completed body.
+conditional = Pipeline().if_do_contains_each(
+    "x", lambda b: b.remove_pattern("x").add_to_end("skipped")
+)
+assert conditional.compile()("x") == ""
+blocks = Pipeline().block_assoc("suffix", lambda b: b.add_to_end("!"))
+assert blocks.call_block("suffix").compile()("é") == "é!"
+```
+
+Text arguments accept `str | Variable`; counts and indices accept `int | Variable`.
+`val`, `var` and `mut_var` also accept integer values and follow Rust's conversion
+to string-valued context entries. `get_var("name")` is the convenient counterpart
+of Rust's helper; `Variable("name")` remains available. Booleans and unsupported
+argument types fail immediately. Numbers must fit an unsigned 64-bit integer,
+then pass the portable layer's native-size checks.
+
+`iter(times, inner)` accepts a one-instruction `Pipeline`, an `Instruction`
+snapshot or a `Variable` reference. It repeats exactly one instruction, as in
+Rust; empty plans, multiple instructions and logical groups are rejected. Strings
+retain the core's `{{variable}}` and `[[ expression ]]` interpolation semantics.
+Indices, ranges and padding follow the Rust operations, including `insert`
+inserting **after** the indexed character. See the
+[complete builder method reference](docs/builder-api.md).
+
+`block_assoc` and `if_do_contains_each` accept either a reusable `Pipeline` body
+or a callback `(Pipeline) -> Pipeline`. Callbacks run once during construction;
+they are never retained or invoked during processing. The conditional checks
+containment before **each** child, including after preceding children modify text.
+Hierarchy validation uses the same core policies. Existing `block` and
+`contains_each` subplan methods remain available.
+
+`compile()` produces an independent executable. To register a plan, use
+`Processor.register(plan)`; unlike the Rust builder, a Python plan does not borrow
+a processor. Low-level `add(mnemonic, *arguments)` and `Instruction` remain escape
+hatches for dynamic DSL integrations; normal fluent construction needs no DSL
+mnemonics.
 
 ## Errors and files
 
@@ -48,7 +99,7 @@ from pathlib import Path
 from textforge import Pipeline, Processor, TextForgeError
 
 processor = Processor()
-identifier = processor.register(Pipeline().add("tbs"))
+identifier = processor.register(Pipeline().trim_both_sides())
 try:
     processor.process_all("missing", "input")
 except TextForgeError as error:

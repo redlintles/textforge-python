@@ -92,3 +92,28 @@ remains `textforge`, the version remains 0.1.0, and the GitHub repository remain
 `redlintles/textforge-python`. GitHub URLs and the trusted-publisher repository
 field intentionally retain that repository name. TestPyPI configuration remains
 a separate account setup step. No publication was performed by this rename.
+
+## 2026-10-30: Rust-style fluent builder
+
+The maintainer requested that the Python API reflect the intentionally ergonomic
+public Rust builder instead of requiring mnemonic strings. Pipeline now exposes
+all 58 TextForgeBuilderMethods operations as ordinary, typed methods, plus
+block_assoc, if_do_contains_each, and call_block. Numeric variable values preserve
+Rust's string conversion; get_var mirrors the Rust helper. Iteration accepts a
+single named-operation subplan. Group callbacks return an immutable subplan and
+run once at construction. Existing mnemonic construction remains compatible as a
+low-level escape hatch. The public Rust contract and engine snapshot are unchanged.
+
+A checked generator maintains signatures against the vendored public API and
+registry. An independent Rust executable captures all 61 builder cases, using
+actual public-builder calls and its original examples. The 97 Python tests compare
+outputs against that oracle, alongside explicit Unicode, type-validation, keyword
+argument, variable, callback, ownership and structural-validation regressions.
+See builder-api.md for the complete named surface and maintenance commands.
+
+Validation passed for the fluent update: generated-source/oracle freshness, all
+97 Python tests, Ruff lint/format, mypy strict, adapter formatting/clippy/tests,
+the test-only Rust oracle and its clippy check, and the full vendored core
+pre-commit checklist. Release wheel/sdist metadata and an external source rebuild
+were verified. Production wheels were checked to exclude core test_access.
+No version change, Git push or publication was performed.

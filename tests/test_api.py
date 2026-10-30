@@ -218,10 +218,13 @@ def test_exception_can_be_pickled() -> None:
     assert restored.message == raised.value.message
 
 
-def test_readme_examples(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize("document", ["README.md", "docs/builder-api.md"])
+def test_documentation_examples(
+    document: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     import re
 
-    readme = Path(__file__).resolve().parents[1] / "README.md"
+    readme = Path(__file__).resolve().parents[1] / document
     examples = re.findall(r"```python\n(.*?)```", readme.read_text(encoding="utf-8"), re.DOTALL)
     assert examples
     monkeypatch.chdir(tmp_path)

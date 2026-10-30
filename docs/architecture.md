@@ -1,7 +1,13 @@
 # Binding architecture
 
 `python/textforge/__init__.py` supplies a fully annotated, immutable construction
-facade. Native classes `Instruction` and `Variable` are immutable; instruction
+facade. All 58 named instruction methods are explicit Python definitions matching the
+vendored Rust builder, plus its block/conditional methods. A maintenance generator
+reads the pinned Rust trait signatures and registry parameter categories, emits
+statically typed methods into Pipeline, and fails CI if that source drifts. There
+is no runtime method injection or __getattr__ dispatch. Builder-specific numeric
+normalization for val/var/mut_var is preserved in the argument conversion helpers.
+Native classes `Instruction` and `Variable` are immutable; instruction
 arguments can be inspected through `name` and `arguments`. The public Python
 processor uses composition rather than subclassing PyO3 internals. Native type
 stubs and a `py.typed` marker ship in wheels and source packages.
@@ -61,3 +67,23 @@ binary stream callbacks, reusable BatchPool objects, raw native paths, and
 `show_transforms` (use typed/list snapshots instead). These are extension work;
 the package does not claim complete portable API parity. Optional watchers and
 buffered core features are not enabled in distributed wheels. Bytecode is enabled.
+
+## Builder conformance
+
+`scripts/generate_builder.py` regenerates the marked methods in the public Python
+module; it uses development-time Ruff formatting. Handwritten group methods and
+terminal compilation remain outside that generated section. Public annotations
+resolve at runtime and are visible to static checkers and IDEs.
+
+`scripts/generate_builder_reference.py` builds a separate Rust reference executable
+using TextForgeBuilderMethods and the original builder's doctest inputs, plus
+logical examples. Its saved results are compared to Python execution for all 61
+builder methods. Expected outputs are obtained from actual Rust builder calls,
+not from the portable mnemonic mapping. CI re-executes the oracle before Python
+tests, so stale fixtures fail instead of silently blessing changed behavior.
+
+The reference executable's `test-reference` feature enables the core's test_access
+solely to construct the typed inner token required by Rust's iter test. Those
+internal types are not public without test_access in the pinned core. Distributed
+wheels continue to enable only the production extension-module feature and the
+core bytecode feature; test helpers are not enabled in release packages.
