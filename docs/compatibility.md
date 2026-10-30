@@ -2,7 +2,7 @@
 
 | Component | Supported/configured contract | Verification |
 | --- | --- | --- |
-| Binding | Cargo/Python distribution 0.1.1; import `textforge` | Version metadata checked against the installed native extension |
+| Binding | Cargo/Python distribution 0.1.2; import `textforge` | Version metadata checked against the installed native extension |
 | Core | 0.1.9; exact revision in `vendor/CORE_REVISION` (`7314cfc9d421de004ed5140dcf8276dd177601d0`) | Pinned source hashes, method mapping, independent Rust references |
 | Cargo features | bytecode, watchers, buffered enabled | Runtime features() checked in installed artifacts; test_access only in test-reference |
 | CPython | 3.10–3.14, ordinary GIL builds | CI matrix configured on every wheel platform; local verification is 3.12 |

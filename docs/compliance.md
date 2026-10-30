@@ -27,3 +27,9 @@ Run `python scripts/check.py` against an installed current wheel, then
 build release wheel/sdist, run twine check, independently rebuild/install the sdist,
 and require the configured platform jobs to pass. Local checks do not establish
 Windows/macOS success or third-party publisher environment protection.
+
+
+The 0.1.2 preparation refreshes verified stable dependency versions and both Rust
+lockfiles, pins direct Python development tools, migrates macOS CI to macos-15,
+and adds source/artifact/installed version agreement checks. See
+[dependency versions](dependencies.md) and [version history](../Changelog.md).

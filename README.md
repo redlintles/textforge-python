@@ -4,9 +4,11 @@ Typed Python bindings for [TextForge](https://github.com/redlintles/textforge),
 implemented with PyO3 against its owned portable API. Distribution name:
 `textforgers`; Python import: `textforge`. Requires Python 3.10 or newer.
 
+This checkout prepares **0.1.2**. See [Changelog.md](Changelog.md) for changes
+from 0.1.1 and [the dependency snapshot](docs/dependencies.md) for tested versions.
+
 For a published release, use `pip install textforgers`; to build this checkout,
-use the commands below. Do not install the
-unrelated `textforge` distribution as a substitute.
+use the commands below. Do not install the unrelated `textforge` distribution as a substitute.
 
 ```python
 from textforge import Pipeline, Processor, get_var
@@ -80,15 +82,18 @@ inserting **after** the indexed character. See the
 [complete builder method reference](docs/builder-api.md).
 
 `block_assoc` and `if_do_contains_each` accept either a reusable `Pipeline` body
-or a callback `(Pipeline) -> Pipeline`. Callbacks run once during construction;
-they are never retained or invoked during processing. The conditional checks
+or a callback `(Pipeline) -> Pipeline`. These group callbacks run once during construction;
+they are never retained or invoked during processing. Runtime observer callbacks,
+described below, are a separate facility. The conditional checks
 containment before **each** child, including after preceding children modify text.
 Hierarchy validation uses the same core policies. Existing `block` and
 `contains_each` subplan methods remain available.
 
 `compile()` produces an independent executable. To register a plan, use
 `Processor.register(plan)`; unlike the Rust builder, a Python plan does not borrow
-a processor. Low-level `add(mnemonic, *arguments)` and `Instruction` remain escape
+a processor. For the Rust-style registration workflow,
+`processor.create_pipeline().trim_both_sides().build()` returns a registered ID.
+Such a plan retains its Python processor and can be built repeatedly. Low-level `add(mnemonic, *arguments)` and `Instruction` remain escape
 hatches for dynamic DSL integrations; normal fluent construction needs no DSL
 mnemonics.
 
@@ -139,35 +144,43 @@ PEP 561 annotations and [architecture](docs/architecture.md).
 
 ## Build and check
 
-Rust 1.89 or newer and a Python development environment are required for source builds. Published wheels will not require Rust.
+Wheels do not require Rust. Building from source requires Rust 1.89 or newer and
+Python 3.10 or newer. Use an empty artifact directory for each release candidate;
+older wheels in the same directory are rejected by the distribution validator.
 
 ```sh
 python3 -m venv .venv
-# POSIX; on Windows use .venv\Scripts\activate
 . .venv/bin/activate
-pip install --group dev
-maturin build --locked --out dist
-pip install --force-reinstall --no-deps --no-index --find-links dist textforgers
+python -m pip install --upgrade pip==26.2.2
+python -m pip install --group dev
+maturin build --release --locked --sdist --out dist/0.1.2
+python -m pip install --force-reinstall --no-deps --no-index --find-links dist/0.1.2 textforgers==0.1.2
 python scripts/check.py
-python scripts/check_distribution.py --wheel-dir dist --types
-maturin build --release --locked --sdist --out dist
-python -m twine check dist/*
+python scripts/check_distribution.py --wheel-dir dist/0.1.2 --types
+python -m twine check dist/0.1.2/*
 ```
 
-Use a current pip that supports dependency groups, or install the development
-tools explicitly: `pip install maturin pytest ruff mypy build twine`. Tests import
-the installed wheel; do not put `python/` on `PYTHONPATH` for wheel verification.
-For editable development use `maturin develop` in the virtual environment.
+On Windows, activate the environment with `.venv\Scripts\Activate.ps1` in
+PowerShell. The pinned pip version supports the development group; pyproject.toml
+pins maturin and the direct test/lint/type/package tools to the verified stable
+versions. There are no Python runtime dependencies. Rust dependencies are locked
+in Cargo.lock; use `--locked` when building.
+
+Tests import the installed wheel; do not put `python/` on `PYTHONPATH` for wheel
+verification. For editable development, use `maturin develop` in the environment.
+The distribution validator checks source/wheel/installed version agreement,
+typing files, the native import, enabled capabilities and a typed external client.
+CI configures CPython 3.10–3.14 on Linux x86_64, Windows x86_64 and macOS arm64
+(`macos-15`). Local Linux checks do not establish those remote jobs have passed.
 
 The vendored core makes an independent clone and sdist self-contained without a
 parent TextForge checkout. [Release instructions](docs/releasing.md) describe
 wheel platforms, trusted publishing, source-package verification, and the steps
 that require the maintainer's PyPI account.
 
-See [development record](docs/development.md) for implemented coverage, validation,
-the implementation history, and how to resume development. GPLv3 license
+See [development record](docs/development.md) for validation history and how to
+resume development. GPLv3 license
 text is preserved from the core in `LICENSE` and `vendor/textforge/LICENSE`.
-
 
 ## Observers, buffers and worker pools
 
@@ -194,10 +207,12 @@ with TemporaryDirectory() as directory:
 ```
 
 Custom observers accept `(Observation) -> str`; callback exceptions become
-structured callback-stage errors. `PortableBuffer.from_reader` and `copy_to` use
+structured callback-stage errors. Observers must be used and cleared on their
+creating thread; callbacks cannot re-enter the same mutably borrowed processor. `PortableBuffer.from_reader` and `copy_to` use
 borrowed synchronous binary streams and preserve partial reads/writes. Buffers
 support ranged byte reads, spill inspection, file export and explicit consuming
-`into_string`. Buffered processing consumes its input on success or failure.
+`into_string`. Buffered processing consumes its input on success or core execution
+failure; argument/borrow checks before transfer leave it untouched.
 Spill thresholds are placement choices, not hard process memory limits.
 
 Use `with BatchPool(2) as pool` and

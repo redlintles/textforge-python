@@ -20,6 +20,7 @@ classifiers = [
 [project.urls]
 Repository = "https://github.com/redlintles/textforge-python"
 Issues = "https://github.com/redlintles/textforge-python/issues"
+Changelog = "https://github.com/redlintles/textforge-python/blob/main/Changelog.md"
 
 [dependency-groups]
 dev = [
@@ -36,6 +37,7 @@ python-source = "python"
 module-name = "textforge._native"
 features = ["extension-module"]
 include = [
+  { path = "Changelog.md", format = "sdist" },
   { path = "scripts/**", format = "sdist" },
   { path = "tests/**", format = "sdist" },
   { path = "docs/**", format = "sdist" },

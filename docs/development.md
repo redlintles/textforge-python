@@ -148,3 +148,27 @@ wheel files, and type-checks a consumer outside the checkout. CI tests CPython
 its execution status must still be checked before release. Local validation is
 Linux x86_64 / CPython 3.12. No push, publication or version bump is part of this
 update. Future binding changes require the maintainer's approval.
+
+
+## 2026-10-30: prepare binding 0.1.2
+
+The maintainer requested release preparation, dependency updates and release notes,
+while retaining responsibility for publication. Package metadata now identifies
+0.1.2; Changelog.md records changes since the prior version, including the portable
+parity work. The source distribution includes the changelog and the README uses a
+version-specific artifact directory with pinned build/test tools.
+
+Verified the newest stable direct Rust/Python dependencies and Action tags against
+their official indices/release APIs. Refreshed copied-core dependency bounds and
+both Cargo lockfiles; 16 compatible transitive Rust packages changed. PyO3 was
+already at the verified latest stable 0.30.1. Core source/API hashes and both Rust
+reference fixtures remain unchanged. See dependencies.md for the snapshot.
+
+CI migrates to macos-15, uses the reviewed current Action tags, and installs the
+same direct tool versions as local development. The distribution validator now
+rejects wheel metadata that differs from the source package name/version and checks
+that the installed/native versions also match. Regression tests cover stale and
+unrelated wheels. Rust 1.89 remains the verified source-build minimum.
+
+Publication, TestPyPI uploads, tags and pushes are left to the maintainer. Review
+remote matrix jobs and account/environment setup using releasing.md before launch.

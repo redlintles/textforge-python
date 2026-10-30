@@ -5,11 +5,15 @@ from __future__ import annotations
 import argparse
 import importlib.metadata
 import importlib.resources
+import re
 import subprocess
 import sys
 import tempfile
 import zipfile
+from email.parser import BytesParser
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
 
 REQUIRED = {
     "textforge/py.typed",
@@ -44,6 +48,29 @@ enabled: bool = features().buffered
 """
 
 
+def source_version() -> str:
+    """Read the binding package version used by maturin's dynamic metadata."""
+    manifest = (ROOT / "Cargo.toml").read_text(encoding="utf-8")
+    package = manifest.split("[package]", 1)[1].split("\n[", 1)[0]
+    match = re.search(r'^version\s*=\s*"([^"\n]+)"\s*$', package, re.MULTILINE)
+    if match is None:
+        raise SystemExit("Cannot determine the source package version")
+    return match[1]
+
+
+def check_metadata(archive: zipfile.ZipFile, expected: str) -> None:
+    """Reject stale or unrelated wheels before inspecting their package files."""
+    metadata = [name for name in archive.namelist() if name.endswith(".dist-info/METADATA")]
+    if len(metadata) != 1:
+        raise SystemExit("Wheel must contain exactly one distribution METADATA file")
+    headers = BytesParser().parsebytes(archive.read(metadata[0]))
+    if headers["Name"] != "textforgers" or headers["Version"] != expected:
+        raise SystemExit(
+            f"Wheel metadata does not match source textforgers {expected}: "
+            f"{headers['Name']} {headers['Version']}"
+        )
+
+
 def main() -> None:
     """Check every wheel in a directory; optionally type-check an external client."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -53,8 +80,10 @@ def main() -> None:
     wheels = sorted(args.wheel_dir.glob("*.whl"))
     if not wheels:
         raise SystemExit("No wheels found")
+    expected = source_version()
     for wheel in wheels:
         with zipfile.ZipFile(wheel) as archive:
+            check_metadata(archive, expected)
             names = set(archive.namelist())
             missing = REQUIRED - names
             if missing:
@@ -71,8 +100,8 @@ def main() -> None:
             raise SystemExit(f"Installed package lacks {required}")
     import textforge
 
-    if textforge.__version__ != importlib.metadata.version("textforgers"):
-        raise SystemExit("Native and distribution versions disagree")
+    if not (textforge.__version__ == importlib.metadata.version("textforgers") == expected):
+        raise SystemExit("Source, native and installed distribution versions disagree")
     if not (
         textforge.features().bytecode
         and textforge.features().watchers
