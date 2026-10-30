@@ -2,10 +2,10 @@
 
 Typed Python bindings for [TextForge](https://github.com/redlintles/textforge),
 implemented with PyO3 against its owned portable API. Distribution name:
-`textforge-python`; Python import: `textforge`. Requires Python 3.10 or newer.
+`textforgers`; Python import: `textforge`. Requires Python 3.10 or newer.
 
 This repository prepares the first Python release; it has not been published yet.
-Once published, installation is `pip install textforge-python`. Do not install the
+Once published, installation is `pip install textforgers`. Do not install the
 unrelated `textforge` distribution as a substitute.
 
 ```python
@@ -95,7 +95,7 @@ python3 -m venv .venv
 . .venv/bin/activate
 pip install --group dev
 maturin build --locked --out dist
-pip install --force-reinstall --no-deps --no-index --find-links dist textforge-python
+pip install --force-reinstall --no-deps --no-index --find-links dist textforgers
 python scripts/check.py
 maturin build --release --locked --sdist --out dist
 python -m twine check dist/*

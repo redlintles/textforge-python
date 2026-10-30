@@ -89,7 +89,7 @@ jobs:
         run: |
           mkdir "$RUNNER_TEMP/sdist-check"
           tar -xzf dist/*.tar.gz -C "$RUNNER_TEMP/sdist-check"
-          cd "$RUNNER_TEMP"/sdist-check/textforge_python-*
+          cd "$RUNNER_TEMP"/sdist-check/textforgers-*
           maturin build --release --locked --out wheels
           python -m pip install --no-index --find-links wheels textforgers
           python -m pytest

@@ -17,7 +17,7 @@ Implemented:
 - Registry operations, single/full/debug execution, typed/textual snapshots,
   textual and bytecode persistence, UTF-8 files and parallel file tasks.
 - Python >=3.10 stable-ABI wheels, PEP 561 stubs/py.typed, license and package
-  metadata; distribution `textforge-python` and import `textforge`.
+  metadata; distribution `textforgers` and import `textforge`.
 - An identified vendored core snapshot (see vendor/CORE_REVISION), so independent
   Git clones and source distributions need no parent directory or unpublished
   crates.io version of the portable API. Only workspace metadata was adapted.
@@ -82,3 +82,13 @@ portable parity work here, without rewriting the core API:
 Run `python scripts/check.py` against an installed wheel after every adapter
 change. Repeat sdist rebuilding when packaging or vendored sources change. Keep
 Python and parent commits separate, and do not push/publish without approval.
+
+## PyPI distribution rename
+
+The maintainer selected `textforgers` as the PyPI project name and configured its
+trusted publisher. Cargo package identity, lockfiles, installation examples and
+the CI sdist extraction path now use that distribution name. The Python import
+remains `textforge`, the version remains 0.1.0, and the GitHub repository remains
+`redlintles/textforge-python`. GitHub URLs and the trusted-publisher repository
+field intentionally retain that repository name. TestPyPI configuration remains
+a separate account setup step. No publication was performed by this rename.

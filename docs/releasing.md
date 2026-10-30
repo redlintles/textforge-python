@@ -5,7 +5,7 @@ existing versions. The distribution starts with the pre-existing binding crate
 version 0.1.0. The core remains 0.1.9. A maintainer must approve future version
 changes and actual publication according to the main project's AGENTS.md.
 
-1. Verify availability/ownership of `textforge-python` on PyPI and TestPyPI.
+1. Verify availability/ownership of `textforgers` on PyPI and TestPyPI.
    The package imports as `textforge`. Avoid installing another distribution that
    supplies that same import into the same environment.
 2. Run the full quality script against an installed wheel. Build a release wheel
