@@ -2,11 +2,21 @@
 name = "textforge-python"
 version = "0.1.0"
 edition = "2024"
+description = "Typed Python bindings for the TextForge text-processing DSL"
+license = "GPL-3.0-only"
+repository = "https://github.com/redlintles/textforge-python"
+readme = "README.md"
+publish = false
 
 [lib]
-name = "textforge"
-crate-type = ["cdylib"]
+name = "_native"
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-textforge = { path = "../../.." }
-pyo3 = { version = "0.30.1", features = ["extension-module"] }
+textforge = { path = "vendor/textforge", features = ["bytecode"] }
+pyo3 = { version = "0.30.1", features = ["abi3-py310"] }
+
+[features]
+extension-module = ["pyo3/extension-module"]
+
+[workspace]

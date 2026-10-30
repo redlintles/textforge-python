@@ -1,0 +1,10 @@
+atb "banana";
+raw "banana" "laranja";
+splc;
+raw " " "_";
+
+blk block_1 assoc dlf;
+blk block_1 assoc dll;
+blk block_1 assoc ins 5 "banana";
+
+cblk block_1;
