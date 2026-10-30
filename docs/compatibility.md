@@ -9,7 +9,7 @@
 | Stable ABI | abi3-py310; metadata allows Python >=3.10 | Later interpreter versions remain unverified until added to CI; free-threaded Python and PyPy are not supported/tested targets |
 | Linux wheels | x86_64, manylinux from maturin-action | CI build/install/test; local Linux x86_64 wheel and independent sdist rebuild |
 | Windows wheels | x86_64 | CI build/install/test; native wide-path regression is platform-gated |
-| macOS wheels | arm64, macos-14 runner | CI build/install/test |
+| macOS wheels | arm64, macos-15 runner | CI build/install/test |
 | Other architectures/OS combinations | Source builds may be possible | Not claimed as tested/supported wheel targets |
 | Rust source builds | 1.89+ (edition 2024 and pinned dependency requirements) | Local cargo +1.89.0 check passed; minimum-rust CI job checks 1.89 and stable runs the full checklist |
 | Paths | Unicode and OS-native representations, without replacement | Unix bytes/surrogateescape and Windows UTF-16/surrogatepass tests |
