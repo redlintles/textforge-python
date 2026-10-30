@@ -7,15 +7,18 @@
 //! assert_eq!(plan.compile()?.process("é")?, "é!");
 //! # Ok::<(), textforge::api::portable::BindingError>(())
 //! ```
+mod buffers;
+mod observers;
+mod paths;
+mod processor;
+
 use pyo3::IntoPyObjectExt;
 use pyo3::{
     exceptions::PyTypeError,
     prelude::*,
     types::{PyBool, PyInt, PyString, PyTuple},
 };
-use textforge::api::portable::{
-    self, Argument, BindingError, FilePath, InstructionSpec, PipelinePlan, PortableProcessor,
-};
+use textforge::api::portable::{self, Argument, BindingError, InstructionSpec, PipelinePlan};
 
 pyo3::create_exception!(_native, TextForgeError, pyo3::exceptions::PyException);
 
@@ -199,156 +202,21 @@ impl CompiledPipeline {
     }
 }
 
-/// Registry and file processor; Python: `processor = Processor()`.
-#[pyclass(module = "textforge")]
-#[derive(Default)]
-struct Processor {
-    inner: PortableProcessor,
-}
-#[pymethods]
-impl Processor {
-    #[new]
-    fn new() -> Self {
-        Self::default()
-    }
-    fn register(&mut self, py: Python<'_>, plan: &Plan) -> PyResult<String> {
-        self.inner.register(&plan.inner).map_err(|e| error(py, e))
-    }
-    fn remove_transform(&mut self, py: Python<'_>, id: &str) -> PyResult<()> {
-        self.inner.remove_transform(id).map_err(|e| error(py, e))
-    }
-    fn transform_exists(&self, id: &str) -> bool {
-        self.inner.transform_exists(id)
-    }
-    fn list_transforms(&self) -> Vec<String> {
-        self.inner.list_transforms()
-    }
-    fn clone_pipeline(&mut self, py: Python<'_>, id: &str) -> PyResult<String> {
-        self.inner.clone_pipeline(id).map_err(|e| error(py, e))
-    }
-    fn get_transform_vec(&self, py: Python<'_>, id: &str) -> PyResult<Vec<Instruction>> {
-        self.inner
-            .get_transform_vec(id)
-            .map(|specs| specs.into_iter().map(Instruction::from_spec).collect())
-            .map_err(|e| error(py, e))
-    }
-    #[pyo3(signature = (tasks, threads=0))]
-    fn process_batch(
-        &self,
-        py: Python<'_>,
-        tasks: Vec<(String, String, String)>,
-        threads: u64,
-    ) -> PyResult<Vec<Option<Py<PyAny>>>> {
-        let tasks = tasks
-            .into_iter()
-            .map(|(input, pipeline_id, output)| portable::FileTask {
-                input: FilePath::from_text(input),
-                pipeline_id,
-                output: FilePath::from_text(output),
-            })
-            .collect();
-        let pool = portable::BatchPool::new(threads).map_err(|e| error(py, e))?;
-        let results = py.detach(|| self.inner.process_batch_in_pool(&pool, tasks));
-        Ok(results
-            .into_iter()
-            .map(|result| result.err().map(|e| error(py, e).into_value(py).into_any()))
-            .collect())
-    }
-    fn get_text_transform_vec(&self, py: Python<'_>, id: &str) -> PyResult<Vec<String>> {
-        self.inner
-            .get_text_transform_vec(id)
-            .map_err(|e| error(py, e))
-    }
-    fn process_all(&mut self, py: Python<'_>, id: &str, input: &str) -> PyResult<String> {
-        py.detach(|| self.inner.process_all(id, input))
-            .map_err(|e| error(py, e))
-    }
-    fn run_transform(&self, py: Python<'_>, id: &str, input: &str) -> PyResult<String> {
-        py.detach(|| self.inner.run_transform(id, input))
-            .map_err(|e| error(py, e))
-    }
-    fn process_single(
-        &mut self,
-        py: Python<'_>,
-        instruction: &Instruction,
-        input: &str,
-    ) -> PyResult<String> {
-        let spec = instruction.spec.clone();
-        py.detach(|| self.inner.process_single(spec, input))
-            .map_err(|e| error(py, e))
-    }
-    fn process_all_with_debug(
-        &mut self,
-        py: Python<'_>,
-        id: &str,
-        input: &str,
-    ) -> PyResult<String> {
-        py.detach(|| self.inner.process_all_with_debug(id, input))
-            .map_err(|e| error(py, e))
-    }
-    fn process_single_with_debug(
-        &mut self,
-        py: Python<'_>,
-        instruction: &Instruction,
-        input: &str,
-    ) -> PyResult<String> {
-        let spec = instruction.spec.clone();
-        py.detach(|| self.inner.process_single_with_debug(spec, input))
-            .map_err(|e| error(py, e))
-    }
-    fn get_pipeline_from_file(&mut self, py: Python<'_>, path: String) -> PyResult<String> {
-        py.detach(|| {
-            self.inner
-                .get_pipeline_from_file(&FilePath::from_text(path))
-        })
-        .map_err(|e| error(py, e))
-    }
-    fn write_pipeline_to_file(&mut self, py: Python<'_>, id: &str, path: String) -> PyResult<()> {
-        py.detach(|| {
-            self.inner
-                .write_pipeline_to_file(id, &FilePath::from_text(path))
-        })
-        .map_err(|e| error(py, e))
-    }
-    fn read_from_bytecode_file(&mut self, py: Python<'_>, path: String) -> PyResult<String> {
-        py.detach(|| {
-            self.inner
-                .read_from_bytecode_file(&FilePath::from_text(path))
-        })
-        .map_err(|e| error(py, e))
-    }
-    fn write_to_bytecode_file(&mut self, py: Python<'_>, id: &str, path: String) -> PyResult<()> {
-        py.detach(|| {
-            self.inner
-                .write_to_bytecode_file(id, &FilePath::from_text(path))
-        })
-        .map_err(|e| error(py, e))
-    }
-    fn process_file(
-        &mut self,
-        py: Python<'_>,
-        id: &str,
-        input: String,
-        output: String,
-    ) -> PyResult<()> {
-        py.detach(|| {
-            self.inner.process_file(
-                id,
-                &FilePath::from_text(input),
-                &FilePath::from_text(output),
-            )
-        })
-        .map_err(|e| error(py, e))
-    }
-}
-
 #[pymodule]
 fn _native(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<Variable>()?;
     module.add_class::<Instruction>()?;
     module.add_class::<Plan>()?;
     module.add_class::<CompiledPipeline>()?;
-    module.add_class::<Processor>()?;
+    module.add_class::<processor::Processor>()?;
+    module.add_class::<paths::FilePath>()?;
+    module.add_class::<paths::Features>()?;
+    module.add_class::<paths::BatchPool>()?;
+    module.add_class::<buffers::BufferOptions>()?;
+    module.add_class::<buffers::PortableBuffer>()?;
+    module.add_class::<observers::Observation>()?;
+    module.add_class::<observers::Observers>()?;
+    module.add_function(wrap_pyfunction!(paths::features, module)?)?;
     let exception_type = module.py().get_type::<TextForgeError>();
     exception_type.setattr("__module__", "textforge")?;
     module.add("TextForgeError", exception_type)?;

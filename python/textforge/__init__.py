@@ -8,14 +8,15 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from os import PathLike, fspath
 from typing import TypeAlias
 
 from . import _native
 from ._arguments import _instruction, _number, _text, _value
+from ._buffers import BufferOptions, PortableBuffer, StreamReader, StreamWriter
 from ._native import (
     CompiledPipeline as CompiledPipeline,
 )
+from ._native import Features, FilePath, Observation, features
 from ._native import (
     Instruction as Instruction,
 )
@@ -28,12 +29,27 @@ from ._native import (
 from ._native import (
     __version__ as __version__,
 )
+from ._observers import Observers
+from ._paths import Path
+from ._processor import BatchPool, BufferTask, FileTask, Processor
 
 Argument: TypeAlias = str | int | Variable | Instruction
-Path: TypeAlias = str | PathLike[str]
 
 __all__ = [
     "Argument",
+    "BatchPool",
+    "BufferOptions",
+    "BufferTask",
+    "Features",
+    "FilePath",
+    "FileTask",
+    "Observation",
+    "Observers",
+    "Path",
+    "PortableBuffer",
+    "StreamReader",
+    "StreamWriter",
+    "features",
     "CompiledPipeline",
     "Instruction",
     "Pipeline",
@@ -66,12 +82,14 @@ class Pipeline:
 
     _nodes: tuple[Instruction | _Group, ...]
     _depth: int
+    _processor: Processor | None
 
     def __init__(self, *instructions: Instruction) -> None:
         if any(not isinstance(item, Instruction) for item in instructions):
             raise TypeError("Pipeline accepts Instruction objects")
         object.__setattr__(self, "_nodes", instructions)
         object.__setattr__(self, "_depth", 0)
+        object.__setattr__(self, "_processor", None)
 
     def _append(self, node: Instruction | _Group) -> Pipeline:
         depth = max(self._depth, node.body._depth + 1) if isinstance(node, _Group) else self._depth
@@ -80,6 +98,7 @@ class Pipeline:
         result = Pipeline()
         object.__setattr__(result, "_nodes", (*self._nodes, node))
         object.__setattr__(result, "_depth", depth)
+        object.__setattr__(result, "_processor", self._processor)
         return result
 
     def _operation(self, name: str, *arguments: Argument) -> Pipeline:
@@ -630,6 +649,22 @@ class Pipeline:
         """Validate atomically and create an executable with fresh context per call."""
         return self._lower().compile()
 
+    def push_token(self, instruction: Instruction) -> Pipeline:
+        """Append an owned description, corresponding to Rust's push_token."""
+        if not isinstance(instruction, Instruction):
+            raise TypeError("instruction must be an Instruction")
+        return self._append(instruction)
+
+    def build(self, processor: Processor | None = None) -> str:
+        """Validate/register this reusable plan; return a new pipeline ID each time.
+
+        create_pipeline() binds a processor; standalone plans must supply one.
+        """
+        target = processor if processor is not None else self._processor
+        if target is None:
+            raise ValueError("build requires a processor; use processor.create_pipeline()")
+        return target.register(self)
+
 
 PipelineBody: TypeAlias = Pipeline | Callable[[Pipeline], Pipeline]
 
@@ -652,100 +687,3 @@ def get_var(var_name: str) -> Variable:
     'éé'
     """
     return Variable(var_name)
-
-
-class Processor:
-    """Pipeline registry, text execution, and UTF-8 file/bytecode persistence.
-
-    Long-running native operations release the GIL. Concurrent mutable calls on
-    the same processor are rejected; use compiled pipelines for shared execution.
-
-    >>> processor = Processor()
-    >>> identifier = processor.register(Pipeline().trim_both_sides())
-    >>> processor.process_all(identifier, " é ")
-    'é'
-    """
-
-    def __init__(self) -> None:
-        self._inner = _native.Processor()
-
-    def register(self, plan: Pipeline) -> str:
-        """Validate and register a snapshot; the source plan stays reusable."""
-        return self._inner.register(plan._lower())
-
-    def remove_transform(self, id: str) -> None:
-        """Remove an identifier; missing identifiers raise TextForgeError."""
-        self._inner.remove_transform(id)
-
-    def transform_exists(self, id: str) -> bool:
-        """Return whether an identifier is registered."""
-        return self._inner.transform_exists(id)
-
-    def list_transforms(self) -> list[str]:
-        """Return a sorted snapshot of registered identifiers."""
-        return self._inner.list_transforms()
-
-    def clone_pipeline(self, id: str) -> str:
-        """Register an independent copy under a new identifier."""
-        return self._inner.clone_pipeline(id)
-
-    def get_transform_vec(self, id: str) -> list[Instruction]:
-        """Return independent typed descriptions of the lowered instructions."""
-        return self._inner.get_transform_vec(id)
-
-    def process_batch(
-        self, tasks: list[tuple[Path, str, Path]], *, threads: int = 0
-    ) -> list[TextForgeError | None]:
-        """Process files in parallel, preserving task order and each task's error.
-
-        Each task is ``(input_path, pipeline_id, output_path)``. A successful
-        task returns ``None``; a failed task returns a structured exception.
-        Zero threads lets the engine select its worker count. Output paths
-        must be distinct to avoid concurrent writes to the same file.
-        """
-        converted = [(fspath(input), id, fspath(output)) for input, id, output in tasks]
-        return self._inner.process_batch(converted, threads)
-
-    def get_text_transform_vec(self, id: str) -> list[str]:
-        """Return canonical textual instructions."""
-        return self._inner.get_text_transform_vec(id)
-
-    def process_all(self, id: str, input: str) -> str:
-        """Execute a registered pipeline."""
-        return self._inner.process_all(id, input)
-
-    def run_transform(self, id: str, input: str) -> str:
-        """Execute with an isolated context and no retained error log."""
-        return self._inner.run_transform(id, input)
-
-    def process_single(self, instruction: Instruction, input: str) -> str:
-        """Execute one instruction without registering a pipeline."""
-        return self._inner.process_single(instruction, input)
-
-    def process_all_with_debug(self, id: str, input: str) -> str:
-        """Execute and print engine diagnostics to native stdout."""
-        return self._inner.process_all_with_debug(id, input)
-
-    def process_single_with_debug(self, instruction: Instruction, input: str) -> str:
-        """Execute one instruction and print engine diagnostics."""
-        return self._inner.process_single_with_debug(instruction, input)
-
-    def get_pipeline_from_file(self, path: Path) -> str:
-        """Import a textual pipeline, accepting str or a text PathLike."""
-        return self._inner.get_pipeline_from_file(fspath(path))
-
-    def write_pipeline_to_file(self, id: str, path: Path) -> None:
-        """Export a registered pipeline to a textual file."""
-        self._inner.write_pipeline_to_file(id, fspath(path))
-
-    def read_from_bytecode_file(self, path: Path) -> str:
-        """Import a TextForge bytecode file."""
-        return self._inner.read_from_bytecode_file(fspath(path))
-
-    def write_to_bytecode_file(self, id: str, path: Path) -> None:
-        """Export a pipeline using the core big-endian bytecode format."""
-        self._inner.write_to_bytecode_file(id, fspath(path))
-
-    def process_file(self, id: str, input: Path, output: Path) -> None:
-        """Transform a UTF-8 file; existing output follows core overwrite semantics."""
-        self._inner.process_file(id, fspath(input), fspath(output))

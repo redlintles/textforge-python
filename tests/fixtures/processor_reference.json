@@ -1,0 +1,134 @@
+{
+  "core_revision": "7314cfc9d421de004ed5140dcf8276dd177601d0",
+  "cases": {
+    "unicode": {
+      "ok": "🍌é\u0000é"
+    },
+    "empty": {
+      "ok": "🍌é"
+    },
+    "missing_id": {
+      "error": {
+        "code": 3,
+        "stage": "execution",
+        "message": "Token array not found, is missing a valid identifier for this processor?",
+        "instruction": "get identifier",
+        "input": ""
+      }
+    },
+    "missing_snapshot": {
+      "error": {
+        "code": 3,
+        "stage": "execution",
+        "message": "Transform not found",
+        "instruction": "get_transform_vec",
+        "input": "missing"
+      }
+    },
+    "missing_remove": {
+      "error": {
+        "code": 2,
+        "stage": "execution",
+        "message": "Transformation not found",
+        "instruction": "remove_transform",
+        "input": "missing"
+      }
+    },
+    "missing_variable": {
+      "error": {
+        "code": 9,
+        "stage": "execution",
+        "message": "Variable not found",
+        "instruction": "get_var",
+        "input": "missing"
+      }
+    },
+    "invalid_regex": {
+      "error": {
+        "code": 17,
+        "stage": "execution",
+        "message": "Failed to create regex",
+        "instruction": "sslt",
+        "input": "["
+      }
+    },
+    "unknown": {
+      "error": {
+        "code": 2,
+        "stage": "conversion",
+        "message": "Token Not Found in mapping",
+        "instruction": "unknown",
+        "input": "portable instruction lookup"
+      }
+    },
+    "arity": {
+      "error": {
+        "code": 14,
+        "stage": "validation",
+        "message": "Parameter count mismatch",
+        "instruction": "atb",
+        "input": "expected=1, got=0"
+      }
+    },
+    "parameter_type": {
+      "error": {
+        "code": 23,
+        "stage": "validation",
+        "message": "Literal parameter type mismatch",
+        "instruction": "atb",
+        "input": "parameter=0, expected=String"
+      }
+    },
+    "persistence_missing": {
+      "error": {
+        "code": 3,
+        "stage": "persistence",
+        "message": "Token array not found, is missing a valid identifier for this processor?",
+        "instruction": "get identifier",
+        "input": ""
+      }
+    },
+    "text_roundtrip": {
+      "ok": "🍌xé"
+    },
+    "bytecode_roundtrip": {
+      "ok": "🍌xé"
+    },
+    "buffered": {
+      "ok": "🍌xé"
+    },
+    "watched": {
+      "ok": "🍌xé"
+    },
+    "report": {
+      "ok": "[\n  {\n    \"size\": \"2\"\n  },\n  {\n    \"size\": \"3\"\n  }\n]"
+    },
+    "callback_error": {
+      "error": {
+        "code": 27,
+        "stage": "callback",
+        "message": "ValueError: boom",
+        "instruction": "portable observer",
+        "input": "bad"
+      }
+    },
+    "builtin_error": {
+      "error": {
+        "code": 25,
+        "stage": "conversion",
+        "message": "Unknown builtin watcher",
+        "instruction": "Observers.set_builtin",
+        "input": "missing"
+      }
+    },
+    "invalid_utf8": {
+      "error": {
+        "code": 29,
+        "stage": "execution",
+        "message": "invalid utf-8 sequence of 1 bytes from index 0",
+        "instruction": "TextBuffer",
+        "input": "invalid UTF-8 document"
+      }
+    }
+  }
+}

@@ -13,7 +13,7 @@ name = "_native"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-textforge = { path = "vendor/textforge", features = ["bytecode"] }
+textforge = { path = "vendor/textforge", features = ["bytecode", "watchers", "buffered"] }
 pyo3 = { version = "0.30.1", features = ["abi3-py310"] }
 
 [features]
@@ -25,4 +25,8 @@ test-reference = ["textforge/test_access"]
 
 [[example]]
 name = "builder_reference"
+required-features = ["test-reference"]
+
+[[example]]
+name = "processor_reference"
 required-features = ["test-reference"]
