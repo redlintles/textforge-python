@@ -115,6 +115,22 @@
     }
   },
   {
+    "name": "select_lines",
+    "input": "a\nb\nc",
+    "steps": [
+      [
+        "select_lines",
+        [
+          2,
+          2
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "b\n"
+    }
+  },
+  {
     "name": "trim_both_sides",
     "input": "   banana   ",
     "steps": [
