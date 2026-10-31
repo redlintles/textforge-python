@@ -202,3 +202,21 @@ def test_dlm_invalid_regex() -> None:
     with pytest.raises(TextForgeError) as error:
         Pipeline().delete_lines_matching("[").compile()("a")
     assert error.value.stage == "execution"
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        ("\na", "a\n\n"),
+        ("", ""),
+        ("é🍌é", "é🍌é"),
+        ("a\r\nb\nc", "c\r\nb\na"),
+        ("a\r\nb\r\n", "b\r\na\r\n"),
+        ("\n\n", "\n\n"),
+    ],
+)
+def test_revln_line_boundaries(source: str, expected: str) -> None:
+    fluent = Pipeline().reverse_lines().compile()
+    generic = Pipeline(Instruction("revln")).compile()
+    assert fluent(source) == generic(source) == expected
+    assert fluent(source) == expected

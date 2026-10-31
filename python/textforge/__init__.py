@@ -243,6 +243,14 @@ class Pipeline:
         """
         return self._operation("dlm", _text(pattern, "pattern"))
 
+    def reverse_lines(self) -> Pipeline:
+        """Reverse line contents while preserving terminators at their original positions. Line
+        numbers start at one; see the logical-line guide.
+
+        Matches Rust ``TextForgeBuilderMethods::reverse_lines``.
+        """
+        return self._operation("revln")
+
     def trim_both_sides(self) -> Pipeline:
         """Removes whitespace characters from both the left and right sides of the input.
 

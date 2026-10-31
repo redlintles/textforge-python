@@ -250,6 +250,19 @@
     }
   },
   {
+    "name": "reverse_lines",
+    "input": "a\nb",
+    "steps": [
+      [
+        "reverse_lines",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "b\na"
+    }
+  },
+  {
     "name": "trim_both_sides",
     "input": "   banana   ",
     "steps": [
