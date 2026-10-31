@@ -6,7 +6,7 @@ Expected values also have independent native Rust fixtures in test_fluent.py.
 from __future__ import annotations
 
 import pytest
-from textforge import Instruction, Pipeline
+from textforge import Instruction, Pipeline, TextForgeError
 
 
 @pytest.mark.parametrize(
@@ -18,3 +18,19 @@ def test_apl_line_boundaries(source: str, expected: str) -> None:
     generic = Pipeline(Instruction("apl", "b")).compile()
     assert fluent(source) == generic(source) == expected
     assert fluent(source) == expected
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"), [("a\nb", "b"), ("a\r\nb\r\n", "b\r\n"), ("\n", ""), ("é🍌é", "")]
+)
+def test_dln_line_boundaries(source: str, expected: str) -> None:
+    fluent = Pipeline().delete_line(1).compile()
+    generic = Pipeline(Instruction("dln", 1)).compile()
+    assert fluent(source) == generic(source) == expected
+    assert fluent(source) == expected
+
+
+def test_dln_rejects_zero_index() -> None:
+    with pytest.raises(TextForgeError) as error:
+        Pipeline().delete_line(0).compile()("a\nb")
+    assert error.value.stage == "execution"

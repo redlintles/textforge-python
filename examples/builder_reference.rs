@@ -70,6 +70,14 @@ fn main() {
         })(),
     );
     record(
+        "delete_line",
+        (|| {
+            let mut processor = TextForgeProcessor::new();
+            let id = processor.create_pipeline().delete_line(1_usize)?.build()?;
+            processor.process_all(&id, "a\nb")
+        })(),
+    );
+    record(
         "trim_both_sides",
         (|| {
             let mut processor = TextForgeProcessor::new();

@@ -142,6 +142,14 @@ class Pipeline:
         """
         return self._operation("apl", _text(text, "text"))
 
+    def delete_line(self, line: int | Variable) -> Pipeline:
+        """Delete one line, including its terminator. Line numbers start at one; see the
+        logical-line guide.
+
+        Matches Rust ``TextForgeBuilderMethods::delete_line``.
+        """
+        return self._operation("dln", _number(line, "line"))
+
     def trim_both_sides(self) -> Pipeline:
         """Removes whitespace characters from both the left and right sides of the input.
 
