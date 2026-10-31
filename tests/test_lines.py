@@ -50,3 +50,19 @@ def test_dlna_rejects_zero_index() -> None:
     with pytest.raises(TextForgeError) as error:
         Pipeline().delete_lines_after(0).compile()("a\nb")
     assert error.value.stage == "execution"
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"), [("a\nb", "b"), ("a\r\né🍌é\r\n", "é🍌é\r\n"), ("\n\n", "\n")]
+)
+def test_dlnb_line_boundaries(source: str, expected: str) -> None:
+    fluent = Pipeline().delete_lines_before(2).compile()
+    generic = Pipeline(Instruction("dlnb", 2)).compile()
+    assert fluent(source) == generic(source) == expected
+    assert fluent(source) == expected
+
+
+def test_dlnb_rejects_zero_index() -> None:
+    with pytest.raises(TextForgeError) as error:
+        Pipeline().delete_lines_before(0).compile()("a\nb")
+    assert error.value.stage == "execution"

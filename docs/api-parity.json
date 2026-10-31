@@ -1,7 +1,7 @@
 {
-  "core_revision": "97aa623ebc4cb6960dc606c079b4a7b723ffed29",
+  "core_revision": "f99f77a5206dabace8d4034129f729f594819ead",
   "source_sha256": {
-    "src/api/mod.rs": "e11ce4ca301cc9143e89da95420d115241cf78e4511fad9fa900d8c8c4a7c182",
+    "src/api/mod.rs": "8ca3ce0f8a093ca599fdc91e1956f64df1f17212873971481664e92a601fa850",
     "src/api/builder.rs": "def89a0c0b9c861208e0be3188e935c7d256003d64fb0bb1cba595a8fd03c6e2",
     "src/api/processor.rs": "575f7d950d35ae5bd2d7794fcbfe5ca99d92dd05dfeb23d8c540a6e0d09cf64b",
     "src/api/processor/buffered.rs": "a0a9d0cec0ea7ca7e197f8b345f5decd294533fc64a8d335da11a81deaf9fb59",
@@ -81,7 +81,8 @@
     "execute_replace_map": "Pipeline.execute_replace_map",
     "append_line": "Pipeline.append_line",
     "delete_line": "Pipeline.delete_line",
-    "delete_lines_after": "Pipeline.delete_lines_after"
+    "delete_lines_after": "Pipeline.delete_lines_after",
+    "delete_lines_before": "Pipeline.delete_lines_before"
   },
   "processor": {
     "add_transform": "Processor.add_transform",

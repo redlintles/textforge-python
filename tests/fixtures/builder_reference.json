@@ -100,6 +100,21 @@
     }
   },
   {
+    "name": "delete_lines_before",
+    "input": "a\nb",
+    "steps": [
+      [
+        "delete_lines_before",
+        [
+          2
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "b"
+    }
+  },
+  {
     "name": "trim_both_sides",
     "input": "   banana   ",
     "steps": [

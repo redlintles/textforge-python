@@ -89,6 +89,17 @@ fn main() {
         })(),
     );
     record(
+        "delete_lines_before",
+        (|| {
+            let mut processor = TextForgeProcessor::new();
+            let id = processor
+                .create_pipeline()
+                .delete_lines_before(2_usize)?
+                .build()?;
+            processor.process_all(&id, "a\nb")
+        })(),
+    );
+    record(
         "trim_both_sides",
         (|| {
             let mut processor = TextForgeProcessor::new();

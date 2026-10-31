@@ -158,6 +158,14 @@ class Pipeline:
         """
         return self._operation("dlna", _number(line, "line"))
 
+    def delete_lines_before(self, line: int | Variable) -> Pipeline:
+        """Delete lines before the given line, retaining that line. Line numbers start at one;
+        see the logical-line guide.
+
+        Matches Rust ``TextForgeBuilderMethods::delete_lines_before``.
+        """
+        return self._operation("dlnb", _number(line, "line"))
+
     def trim_both_sides(self) -> Pipeline:
         """Removes whitespace characters from both the left and right sides of the input.
 
