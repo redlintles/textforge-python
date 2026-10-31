@@ -235,6 +235,21 @@
     }
   },
   {
+    "name": "delete_lines_matching",
+    "input": "a\nb",
+    "steps": [
+      [
+        "delete_lines_matching",
+        [
+          "^b$"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "a\n"
+    }
+  },
+  {
     "name": "trim_both_sides",
     "input": "   banana   ",
     "steps": [

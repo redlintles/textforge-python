@@ -185,3 +185,20 @@ def test_klm_invalid_regex() -> None:
     with pytest.raises(TextForgeError) as error:
         Pipeline().keep_lines_matching("[").compile()("a")
     assert error.value.stage == "execution"
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [("", ""), ("b\r\na\nb", "a\n"), ("a\r\nb\r\n", "a\r\n"), ("é🍌é", "é🍌é")],
+)
+def test_dlm_line_boundaries(source: str, expected: str) -> None:
+    fluent = Pipeline().delete_lines_matching("^b$").compile()
+    generic = Pipeline(Instruction("dlm", "^b$")).compile()
+    assert fluent(source) == generic(source) == expected
+    assert fluent(source) == expected
+
+
+def test_dlm_invalid_regex() -> None:
+    with pytest.raises(TextForgeError) as error:
+        Pipeline().delete_lines_matching("[").compile()("a")
+    assert error.value.stage == "execution"

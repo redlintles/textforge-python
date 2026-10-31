@@ -235,6 +235,14 @@ class Pipeline:
         """
         return self._operation("klm", _text(pattern, "pattern"))
 
+    def delete_lines_matching(self, pattern: str | Variable) -> Pipeline:
+        """Delete lines whose content matches a regular expression. Line numbers start at one;
+        see the logical-line guide.
+
+        Matches Rust ``TextForgeBuilderMethods::delete_lines_matching``.
+        """
+        return self._operation("dlm", _text(pattern, "pattern"))
+
     def trim_both_sides(self) -> Pipeline:
         """Removes whitespace characters from both the left and right sides of the input.
 
