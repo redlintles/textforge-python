@@ -28,6 +28,40 @@ fn record(name: &str, result: Result<String, TextForgeError>) {
 
 fn main() {
     record(
+        "normalize_unicode",
+        (|| {
+            let mut processor = TextForgeProcessor::new();
+            let id = processor
+                .create_pipeline()
+                .normalize_unicode("nfkc")?
+                .build()?;
+            processor.process_all(&id, "Ａﬁ²")
+        })(),
+    );
+    record(
+        "define_replace_map",
+        (|| {
+            let mut processor = TextForgeProcessor::new();
+            let id = processor
+                .create_pipeline()
+                .define_replace_map("animals", "cat", "dog")?
+                .build()?;
+            processor.process_all(&id, "cat")
+        })(),
+    );
+    record(
+        "execute_replace_map",
+        (|| {
+            let mut processor = TextForgeProcessor::new();
+            let id = processor
+                .create_pipeline()
+                .define_replace_map("animals", "cat", "dog")?
+                .execute_replace_map("animals")?
+                .build()?;
+            processor.process_all(&id, "cat")
+        })(),
+    );
+    record(
         "trim_both_sides",
         (|| {
             let mut processor = TextForgeProcessor::new();

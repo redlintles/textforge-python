@@ -27,6 +27,18 @@ def cases() -> list[dict[str, Any]]:
     result = []
     for match in re.finditer(pattern, trait):
         name = match[1]
+        explicit = {
+            "normalize_unicode": ("Ａﬁ²", ["nfkc"]),
+            "define_replace_map": ("cat", ["animals", "cat", "dog"]),
+            "execute_replace_map": ("cat", ["animals"]),
+        }
+        if name in explicit:
+            input_text, arguments = explicit[name]
+            steps = [[name, arguments]]
+            if name == "execute_replace_map":
+                steps.insert(0, ["define_replace_map", ["animals", "cat", "dog"]])
+            result.append({"name": name, "input": input_text, "steps": steps})
+            continue
         if name in {"val", "var", "mut_var", "eval", "iter", "end", "remove_pattern"}:
             continue
         docs_match = re.search(r"((?:    ///[^\n]*\n|[ \t]*\n)*)$", trait[: match.start()])

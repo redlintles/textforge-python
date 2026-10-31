@@ -105,6 +105,35 @@ class Pipeline:
         return self._append(Instruction(name, *arguments))
 
     # BEGIN GENERATED BUILDER METHODS
+    def normalize_unicode(self, mode: str | Variable) -> Pipeline:
+        """Normalize the complete text to `nfc`, `nfd`, `nfkc` or `nfkd`. Mode names are
+        lowercase and may use execution-context variables.
+
+        Matches Rust ``TextForgeBuilderMethods::normalize_unicode``.
+        """
+        return self._operation("unorm", _text(mode, "mode"))
+
+    def define_replace_map(
+        self, name: str | Variable, pattern: str | Variable, replacement: str | Variable
+    ) -> Pipeline:
+        """Define replace map.
+
+        Matches Rust ``TextForgeBuilderMethods::define_replace_map``.
+        """
+        return self._operation(
+            "rmapd",
+            _text(name, "name"),
+            _text(pattern, "pattern"),
+            _text(replacement, "replacement"),
+        )
+
+    def execute_replace_map(self, name: str | Variable) -> Pipeline:
+        """Execute replace map.
+
+        Matches Rust ``TextForgeBuilderMethods::execute_replace_map``.
+        """
+        return self._operation("rmape", _text(name, "name"))
+
     def trim_both_sides(self) -> Pipeline:
         """Removes whitespace characters from both the left and right sides of the input.
 

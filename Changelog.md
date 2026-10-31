@@ -7,6 +7,9 @@ Git history only establishes a version change, not an uploaded release.
 
 ### Added
 
+- Typed adapters for Unicode normalization (`unorm`) and named regex replacement
+  maps (`rmapd`, `rmape`), delegated to the refreshed portable core.
+
 - Complete processor parity through the existing portable API: watchers/reports,
   buffered single/full/file/batch processing, binary stream hooks, native paths,
   reusable batch pools, capability discovery and transform display.
@@ -34,7 +37,7 @@ Git history only establishes a version change, not an uploaded release.
   colored 3.1.1, regex 1.13.1, shell-words 1.1.1 and serde 1.0.229. PyO3 remains
   0.30.1, already the latest stable release checked on 2026-10-30.
 - Refresh both Cargo lockfiles, updating 16 compatible transitive packages.
-  TextForge remains at the pinned 0.1.9 source revision; engine code is unchanged.
+  The exact refreshed TextForge snapshot is recorded in `vendor/CORE_REVISION`.
 - Pin development/build tools: maturin 1.16.0, pytest 9.2.0, Ruff 0.17.3, mypy
   2.4.1, build 1.6.1 and twine 7.0.0; use pip 26.2.2 in setup instructions/CI.
 - Upgrade the release Actions to their verified stable tags and migrate macOS

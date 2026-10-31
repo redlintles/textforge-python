@@ -1,5 +1,60 @@
 [
   {
+    "name": "normalize_unicode",
+    "input": "Ａﬁ²",
+    "steps": [
+      [
+        "normalize_unicode",
+        [
+          "nfkc"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "Afi2"
+    }
+  },
+  {
+    "name": "define_replace_map",
+    "input": "cat",
+    "steps": [
+      [
+        "define_replace_map",
+        [
+          "animals",
+          "cat",
+          "dog"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "cat"
+    }
+  },
+  {
+    "name": "execute_replace_map",
+    "input": "cat",
+    "steps": [
+      [
+        "define_replace_map",
+        [
+          "animals",
+          "cat",
+          "dog"
+        ]
+      ],
+      [
+        "execute_replace_map",
+        [
+          "animals"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "dog"
+    }
+  },
+  {
     "name": "trim_both_sides",
     "input": "   banana   ",
     "steps": [

@@ -1,7 +1,7 @@
 {
-  "core_revision": "7314cfc9d421de004ed5140dcf8276dd177601d0",
+  "core_revision": "3cd3fb7705d38bfd142fc7857d4d3c20ff40a24c",
   "source_sha256": {
-    "src/api/mod.rs": "66004d21e07002ed466818ffd67301034e13ffeef7ce9bf8cbda437580facb32",
+    "src/api/mod.rs": "dda3c46b7d721438d17490d4b6756cb0cfa39368aab9977ff97bd2d1cac4d94e",
     "src/api/builder.rs": "def89a0c0b9c861208e0be3188e935c7d256003d64fb0bb1cba595a8fd03c6e2",
     "src/api/processor.rs": "575f7d950d35ae5bd2d7794fcbfe5ca99d92dd05dfeb23d8c540a6e0d09cf64b",
     "src/api/processor/buffered.rs": "a0a9d0cec0ea7ca7e197f8b345f5decd294533fc64a8d335da11a81deaf9fb59",
@@ -75,7 +75,10 @@
     "trim_left_side": "Pipeline.trim_left_side",
     "trim_right_side": "Pipeline.trim_right_side",
     "val": "Pipeline.val",
-    "var": "Pipeline.var"
+    "var": "Pipeline.var",
+    "normalize_unicode": "Pipeline.normalize_unicode",
+    "define_replace_map": "Pipeline.define_replace_map",
+    "execute_replace_map": "Pipeline.execute_replace_map"
   },
   "processor": {
     "add_transform": "Processor.add_transform",
