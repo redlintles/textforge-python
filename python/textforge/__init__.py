@@ -204,6 +204,14 @@ class Pipeline:
         """
         return self._operation("nln")
 
+    def replace_line(self, line: int | Variable, text: str | Variable) -> Pipeline:
+        """Replace a line content, preserving its terminator. Line numbers start at one; see
+        the logical-line guide.
+
+        Matches Rust ``TextForgeBuilderMethods::replace_line``.
+        """
+        return self._operation("rln", _number(line, "line"), _text(text, "text"))
+
     def trim_both_sides(self) -> Pipeline:
         """Removes whitespace characters from both the left and right sides of the input.
 
