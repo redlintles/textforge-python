@@ -147,3 +147,13 @@ def test_rln_rejects_zero_index() -> None:
     with pytest.raises(TextForgeError) as error:
         Pipeline().replace_line(0, "x").compile()("a\nb")
     assert error.value.stage == "execution"
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"), [("", "b"), ("a\r\n", "b\r\na\r\n"), ("é🍌é", "b\né🍌é")]
+)
+def test_pln_line_boundaries(source: str, expected: str) -> None:
+    fluent = Pipeline().prepend_line("b").compile()
+    generic = Pipeline(Instruction("pln", "b")).compile()
+    assert fluent(source) == generic(source) == expected
+    assert fluent(source) == expected

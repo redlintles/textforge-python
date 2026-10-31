@@ -192,6 +192,21 @@
     }
   },
   {
+    "name": "prepend_line",
+    "input": "a",
+    "steps": [
+      [
+        "prepend_line",
+        [
+          "b"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "b\na"
+    }
+  },
+  {
     "name": "trim_both_sides",
     "input": "   banana   ",
     "steps": [

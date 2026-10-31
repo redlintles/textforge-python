@@ -212,6 +212,13 @@ class Pipeline:
         """
         return self._operation("rln", _number(line, "line"), _text(text, "text"))
 
+    def prepend_line(self, text: str | Variable) -> Pipeline:
+        """Prepend one logical line. Line numbers start at one; see the logical-line guide.
+
+        Matches Rust ``TextForgeBuilderMethods::prepend_line``.
+        """
+        return self._operation("pln", _text(text, "text"))
+
     def trim_both_sides(self) -> Pipeline:
         """Removes whitespace characters from both the left and right sides of the input.
 
