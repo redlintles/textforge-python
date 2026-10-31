@@ -122,6 +122,17 @@ fn main() {
         })(),
     );
     record(
+        "insert_line",
+        (|| {
+            let mut processor = TextForgeProcessor::new();
+            let id = processor
+                .create_pipeline()
+                .insert_line(2_usize, "x")?
+                .build()?;
+            processor.process_all(&id, "a\nb")
+        })(),
+    );
+    record(
         "trim_both_sides",
         (|| {
             let mut processor = TextForgeProcessor::new();

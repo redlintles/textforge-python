@@ -147,6 +147,22 @@
     }
   },
   {
+    "name": "insert_line",
+    "input": "a\nb",
+    "steps": [
+      [
+        "insert_line",
+        [
+          2,
+          "x"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "a\nx\nb"
+    }
+  },
+  {
     "name": "trim_both_sides",
     "input": "   banana   ",
     "steps": [

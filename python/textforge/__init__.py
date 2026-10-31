@@ -188,6 +188,14 @@ class Pipeline:
             "dlni", _number(start_line, "start_line"), _number(end_line, "end_line")
         )
 
+    def insert_line(self, line: int | Variable, text: str | Variable) -> Pipeline:
+        """Insert before a line; line count plus one appends a line. Line numbers start at one;
+        see the logical-line guide.
+
+        Matches Rust ``TextForgeBuilderMethods::insert_line``.
+        """
+        return self._operation("inl", _number(line, "line"), _text(text, "text"))
+
     def trim_both_sides(self) -> Pipeline:
         """Removes whitespace characters from both the left and right sides of the input.
 
