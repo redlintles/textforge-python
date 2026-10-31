@@ -198,6 +198,14 @@ fn main() {
         })(),
     );
     record(
+        "unique_lines",
+        (|| {
+            let mut processor = TextForgeProcessor::new();
+            let id = processor.create_pipeline().unique_lines()?.build()?;
+            processor.process_all(&id, "a\na\nb")
+        })(),
+    );
+    record(
         "trim_both_sides",
         (|| {
             let mut processor = TextForgeProcessor::new();

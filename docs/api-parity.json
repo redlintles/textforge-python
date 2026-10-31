@@ -1,7 +1,7 @@
 {
-  "core_revision": "c31930a2afeab2487b9a083d1906004ac73f82e2",
+  "core_revision": "b59c9516bb430d14fe46f74244472c9f5df584a0",
   "source_sha256": {
-    "src/api/mod.rs": "145fbc1eec21e1f9bb765800993dadb65648a8e8894ef73e3fcfeccaa912048e",
+    "src/api/mod.rs": "3dd5fb2f74d8186cef79709f1d897f7dc1a9ba08e52d0de29a698cd5282fbd03",
     "src/api/builder.rs": "def89a0c0b9c861208e0be3188e935c7d256003d64fb0bb1cba595a8fd03c6e2",
     "src/api/processor.rs": "575f7d950d35ae5bd2d7794fcbfe5ca99d92dd05dfeb23d8c540a6e0d09cf64b",
     "src/api/processor/buffered.rs": "a0a9d0cec0ea7ca7e197f8b345f5decd294533fc64a8d335da11a81deaf9fb59",
@@ -92,7 +92,8 @@
     "delete_empty_lines": "Pipeline.delete_empty_lines",
     "keep_lines_matching": "Pipeline.keep_lines_matching",
     "delete_lines_matching": "Pipeline.delete_lines_matching",
-    "reverse_lines": "Pipeline.reverse_lines"
+    "reverse_lines": "Pipeline.reverse_lines",
+    "unique_lines": "Pipeline.unique_lines"
   },
   "processor": {
     "add_transform": "Processor.add_transform",

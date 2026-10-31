@@ -220,3 +220,14 @@ def test_revln_line_boundaries(source: str, expected: str) -> None:
     generic = Pipeline(Instruction("revln")).compile()
     assert fluent(source) == generic(source) == expected
     assert fluent(source) == expected
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [("", ""), ("a\r\na\nb", "a\r\nb"), ("é\né\né", "é\né\n"), ("\n\n", "\n"), ("🍌\n🍌", "🍌\n")],
+)
+def test_uniqln_line_boundaries(source: str, expected: str) -> None:
+    fluent = Pipeline().unique_lines().compile()
+    generic = Pipeline(Instruction("uniqln")).compile()
+    assert fluent(source) == generic(source) == expected
+    assert fluent(source) == expected

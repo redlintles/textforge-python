@@ -3,7 +3,7 @@
 | Component | Supported/configured contract | Verification |
 | --- | --- | --- |
 | Binding | Cargo/Python distribution 0.1.2; import `textforge` | Version metadata checked against the installed native extension |
-| Core | 0.1.9; exact revision in `vendor/CORE_REVISION` (`c31930a2afeab2487b9a083d1906004ac73f82e2`) | Pinned source hashes, method mapping, independent Rust references |
+| Core | 0.1.9; exact revision in `vendor/CORE_REVISION` (`b59c9516bb430d14fe46f74244472c9f5df584a0`) | Pinned source hashes, method mapping, independent Rust references |
 | Cargo features | bytecode, watchers, buffered enabled | Runtime features() checked in installed artifacts; test_access only in test-reference |
 | CPython | 3.10–3.14, ordinary GIL builds | CI matrix configured on every wheel platform; local verification is 3.12 |
 | Stable ABI | abi3-py310; metadata allows Python >=3.10 | Later interpreter versions remain unverified until added to CI; free-threaded Python and PyPy are not supported/tested targets |

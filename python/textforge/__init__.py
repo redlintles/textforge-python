@@ -251,6 +251,14 @@ class Pipeline:
         """
         return self._operation("revln")
 
+    def unique_lines(self) -> Pipeline:
+        """Keep the first occurrence of each exact line content, in original order. Line
+        numbers start at one; see the logical-line guide.
+
+        Matches Rust ``TextForgeBuilderMethods::unique_lines``.
+        """
+        return self._operation("uniqln")
+
     def trim_both_sides(self) -> Pipeline:
         """Removes whitespace characters from both the left and right sides of the input.
 
