@@ -82,3 +82,19 @@ def test_slnc_rejects_zero_index() -> None:
     with pytest.raises(TextForgeError) as error:
         Pipeline().select_lines(0, 0).compile()("a\nb")
     assert error.value.stage == "execution"
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"), [("a\nb\nc", "a\nc"), ("a\r\né🍌é\r\nc", "a\r\nc"), ("\n\n", "\n")]
+)
+def test_dlni_line_boundaries(source: str, expected: str) -> None:
+    fluent = Pipeline().delete_lines_interval(2, 2).compile()
+    generic = Pipeline(Instruction("dlni", 2, 2)).compile()
+    assert fluent(source) == generic(source) == expected
+    assert fluent(source) == expected
+
+
+def test_dlni_rejects_zero_index() -> None:
+    with pytest.raises(TextForgeError) as error:
+        Pipeline().delete_lines_interval(0, 0).compile()("a\nb")
+    assert error.value.stage == "execution"

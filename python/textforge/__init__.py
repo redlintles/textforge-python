@@ -176,6 +176,18 @@ class Pipeline:
             "slnc", _number(start_line, "start_line"), _number(end_line, "end_line")
         )
 
+    def delete_lines_interval(
+        self, start_line: int | Variable, end_line: int | Variable
+    ) -> Pipeline:
+        """Delete an inclusive interval of lines and retain the rest. Line numbers start at
+        one; see the logical-line guide.
+
+        Matches Rust ``TextForgeBuilderMethods::delete_lines_interval``.
+        """
+        return self._operation(
+            "dlni", _number(start_line, "start_line"), _number(end_line, "end_line")
+        )
+
     def trim_both_sides(self) -> Pipeline:
         """Removes whitespace characters from both the left and right sides of the input.
 

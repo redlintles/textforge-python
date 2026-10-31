@@ -131,6 +131,22 @@
     }
   },
   {
+    "name": "delete_lines_interval",
+    "input": "a\nb\nc",
+    "steps": [
+      [
+        "delete_lines_interval",
+        [
+          2,
+          2
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "a\nc"
+    }
+  },
+  {
     "name": "trim_both_sides",
     "input": "   banana   ",
     "steps": [
