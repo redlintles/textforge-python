@@ -219,6 +219,14 @@ class Pipeline:
         """
         return self._operation("pln", _text(text, "text"))
 
+    def delete_empty_lines(self) -> Pipeline:
+        """Delete empty lines; lines containing whitespace are retained. Line numbers start at
+        one; see the logical-line guide.
+
+        Matches Rust ``TextForgeBuilderMethods::delete_empty_lines``.
+        """
+        return self._operation("dle")
+
     def trim_both_sides(self) -> Pipeline:
         """Removes whitespace characters from both the left and right sides of the input.
 

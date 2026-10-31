@@ -160,6 +160,14 @@ fn main() {
         })(),
     );
     record(
+        "delete_empty_lines",
+        (|| {
+            let mut processor = TextForgeProcessor::new();
+            let id = processor.create_pipeline().delete_empty_lines()?.build()?;
+            processor.process_all(&id, "a\n\nb")
+        })(),
+    );
+    record(
         "trim_both_sides",
         (|| {
             let mut processor = TextForgeProcessor::new();

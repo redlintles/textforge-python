@@ -157,3 +157,14 @@ def test_pln_line_boundaries(source: str, expected: str) -> None:
     generic = Pipeline(Instruction("pln", "b")).compile()
     assert fluent(source) == generic(source) == expected
     assert fluent(source) == expected
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [("", ""), ("\n\r\n", ""), (" \n\t\r\n", " \n\t\r\n"), ("é🍌é\r\n\r\nx", "é🍌é\r\nx")],
+)
+def test_dle_line_boundaries(source: str, expected: str) -> None:
+    fluent = Pipeline().delete_empty_lines().compile()
+    generic = Pipeline(Instruction("dle")).compile()
+    assert fluent(source) == generic(source) == expected
+    assert fluent(source) == expected
