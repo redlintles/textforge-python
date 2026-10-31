@@ -231,3 +231,13 @@ def test_uniqln_line_boundaries(source: str, expected: str) -> None:
     generic = Pipeline(Instruction("uniqln")).compile()
     assert fluent(source) == generic(source) == expected
     assert fluent(source) == expected
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"), [("", ""), ("é🍌é", "é🍌é"), ("a\r\nb\rc\n", "a b c"), ("\n\n", " ")]
+)
+def test_joinln_line_boundaries(source: str, expected: str) -> None:
+    fluent = Pipeline().join_lines(" ").compile()
+    generic = Pipeline(Instruction("joinln", " ")).compile()
+    assert fluent(source) == generic(source) == expected
+    assert fluent(source) == expected

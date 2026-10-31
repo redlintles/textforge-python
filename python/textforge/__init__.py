@@ -259,6 +259,14 @@ class Pipeline:
         """
         return self._operation("uniqln")
 
+    def join_lines(self, separator: str | Variable) -> Pipeline:
+        """Join line contents with a separator, discarding the final terminator. Line numbers
+        start at one; see the logical-line guide.
+
+        Matches Rust ``TextForgeBuilderMethods::join_lines``.
+        """
+        return self._operation("joinln", _text(separator, "separator"))
+
     def trim_both_sides(self) -> Pipeline:
         """Removes whitespace characters from both the left and right sides of the input.
 
