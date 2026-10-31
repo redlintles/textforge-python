@@ -227,6 +227,14 @@ class Pipeline:
         """
         return self._operation("dle")
 
+    def keep_lines_matching(self, pattern: str | Variable) -> Pipeline:
+        """Keep lines whose content matches a regular expression. Line numbers start at one;
+        see the logical-line guide.
+
+        Matches Rust ``TextForgeBuilderMethods::keep_lines_matching``.
+        """
+        return self._operation("klm", _text(pattern, "pattern"))
+
     def trim_both_sides(self) -> Pipeline:
         """Removes whitespace characters from both the left and right sides of the input.
 

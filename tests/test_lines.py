@@ -168,3 +168,20 @@ def test_dle_line_boundaries(source: str, expected: str) -> None:
     generic = Pipeline(Instruction("dle")).compile()
     assert fluent(source) == generic(source) == expected
     assert fluent(source) == expected
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [("", ""), ("b\r\na\nb", "b\r\nb"), ("a\r\nb\r\n", "b\r\n"), ("é🍌é", "")],
+)
+def test_klm_line_boundaries(source: str, expected: str) -> None:
+    fluent = Pipeline().keep_lines_matching("^b$").compile()
+    generic = Pipeline(Instruction("klm", "^b$")).compile()
+    assert fluent(source) == generic(source) == expected
+    assert fluent(source) == expected
+
+
+def test_klm_invalid_regex() -> None:
+    with pytest.raises(TextForgeError) as error:
+        Pipeline().keep_lines_matching("[").compile()("a")
+    assert error.value.stage == "execution"

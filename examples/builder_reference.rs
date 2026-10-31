@@ -168,6 +168,17 @@ fn main() {
         })(),
     );
     record(
+        "keep_lines_matching",
+        (|| {
+            let mut processor = TextForgeProcessor::new();
+            let id = processor
+                .create_pipeline()
+                .keep_lines_matching("^b$")?
+                .build()?;
+            processor.process_all(&id, "a\nb")
+        })(),
+    );
+    record(
         "trim_both_sides",
         (|| {
             let mut processor = TextForgeProcessor::new();

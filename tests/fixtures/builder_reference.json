@@ -220,6 +220,21 @@
     }
   },
   {
+    "name": "keep_lines_matching",
+    "input": "a\nb",
+    "steps": [
+      [
+        "keep_lines_matching",
+        [
+          "^b$"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "b"
+    }
+  },
+  {
     "name": "trim_both_sides",
     "input": "   banana   ",
     "steps": [
