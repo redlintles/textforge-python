@@ -85,6 +85,21 @@
     }
   },
   {
+    "name": "delete_lines_after",
+    "input": "a\nb",
+    "steps": [
+      [
+        "delete_lines_after",
+        [
+          1
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "a\n"
+    }
+  },
+  {
     "name": "trim_both_sides",
     "input": "   banana   ",
     "steps": [

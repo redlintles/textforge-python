@@ -150,6 +150,14 @@ class Pipeline:
         """
         return self._operation("dln", _number(line, "line"))
 
+    def delete_lines_after(self, line: int | Variable) -> Pipeline:
+        """Delete lines after the given line, retaining that line and its terminator. Line
+        numbers start at one; see the logical-line guide.
+
+        Matches Rust ``TextForgeBuilderMethods::delete_lines_after``.
+        """
+        return self._operation("dlna", _number(line, "line"))
+
     def trim_both_sides(self) -> Pipeline:
         """Removes whitespace characters from both the left and right sides of the input.
 
