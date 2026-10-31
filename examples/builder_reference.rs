@@ -133,6 +133,14 @@ fn main() {
         })(),
     );
     record(
+        "remove_line_breaks",
+        (|| {
+            let mut processor = TextForgeProcessor::new();
+            let id = processor.create_pipeline().remove_line_breaks()?.build()?;
+            processor.process_all(&id, "a\nb")
+        })(),
+    );
+    record(
         "trim_both_sides",
         (|| {
             let mut processor = TextForgeProcessor::new();

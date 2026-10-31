@@ -1,7 +1,7 @@
 {
-  "core_revision": "32140489c59e4d1042f445252db8ed579270bea3",
+  "core_revision": "4681a210ac213cc04260d9b9bee6ff29432d7524",
   "source_sha256": {
-    "src/api/mod.rs": "54a5a54592881d6a6b45d2122d0087dab9c514f84ba21dcc5eb3f3291399c060",
+    "src/api/mod.rs": "fbfaa15fb00da75280e4729b8cafa654f7032de3a7e00e3354bb7cc6ef7f4cd4",
     "src/api/builder.rs": "def89a0c0b9c861208e0be3188e935c7d256003d64fb0bb1cba595a8fd03c6e2",
     "src/api/processor.rs": "575f7d950d35ae5bd2d7794fcbfe5ca99d92dd05dfeb23d8c540a6e0d09cf64b",
     "src/api/processor/buffered.rs": "a0a9d0cec0ea7ca7e197f8b345f5decd294533fc64a8d335da11a81deaf9fb59",
@@ -85,7 +85,8 @@
     "delete_lines_before": "Pipeline.delete_lines_before",
     "select_lines": "Pipeline.select_lines",
     "delete_lines_interval": "Pipeline.delete_lines_interval",
-    "insert_line": "Pipeline.insert_line"
+    "insert_line": "Pipeline.insert_line",
+    "remove_line_breaks": "Pipeline.remove_line_breaks"
   },
   "processor": {
     "add_transform": "Processor.add_transform",

@@ -196,6 +196,14 @@ class Pipeline:
         """
         return self._operation("inl", _number(line, "line"), _text(text, "text"))
 
+    def remove_line_breaks(self) -> Pipeline:
+        """Remove all recognized line terminators without inserting spaces. Line numbers start
+        at one; see the logical-line guide.
+
+        Matches Rust ``TextForgeBuilderMethods::remove_line_breaks``.
+        """
+        return self._operation("nln")
+
     def trim_both_sides(self) -> Pipeline:
         """Removes whitespace characters from both the left and right sides of the input.
 
