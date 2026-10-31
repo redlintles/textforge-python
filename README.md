@@ -226,3 +226,23 @@ owned buffer or TextForgeError per task.
 See [API parity](docs/parity.md), [ownership and concurrency](docs/lifecycle.md),
 and [supported configurations](docs/compatibility.md). All fourteen binding rules
 and their evidence are tracked in [the compliance record](docs/compliance.md).
+
+## Logical lines in 0.1.2
+
+This binding includes TextForge **0.2.0**. Line indices start at **1**:
+
+```python
+from textforge import Pipeline
+
+pipeline = (
+    Pipeline()
+    .delete_empty_lines()
+    .unique_lines()
+    .join_lines(" | ")
+    .compile()
+)
+assert pipeline("é\n\né\n🍌") == "é | 🍌"
+```
+
+See [line operations](docs/lines.md) for every typed method, terminator rules and
+error behavior. The exact core commit is pinned in `vendor/CORE_REVISION`.

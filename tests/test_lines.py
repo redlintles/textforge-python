@@ -241,3 +241,10 @@ def test_joinln_line_boundaries(source: str, expected: str) -> None:
     generic = Pipeline(Instruction("joinln", " ")).compile()
     assert fluent(source) == generic(source) == expected
     assert fluent(source) == expected
+
+
+def test_posix_classes_after_pipeline_interpolation() -> None:
+    keep = Pipeline().keep_lines_matching(r"^\[[:alpha:\]]+$").compile()
+    delete = Pipeline().delete_lines_matching(r"^\[[:alpha:\]]+$").compile()
+    assert keep("abc\r\n123\nXYZ") == "abc\r\nXYZ"
+    assert delete("abc\r\n123\nXYZ") == "123\n"

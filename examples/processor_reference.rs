@@ -199,5 +199,239 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .map(|_| String::new()),
     );
+    // BEGIN GENERATED LINE ERROR ORACLE
+    {
+        let mut native = TextForgeProcessor::new();
+        let id = native.create_pipeline().append_line("x\ny")?.build()?;
+        record(
+            "line_append_line_multiline",
+            native
+                .process_all(&id, "a\nb")
+                .map_err(|error| core_error(ErrorStage::Execution, error)),
+        );
+    }
+    {
+        let mut native = TextForgeProcessor::new();
+        let id = native.create_pipeline().prepend_line("x\ny")?.build()?;
+        record(
+            "line_prepend_line_multiline",
+            native
+                .process_all(&id, "a\nb")
+                .map_err(|error| core_error(ErrorStage::Execution, error)),
+        );
+    }
+    {
+        let mut native = TextForgeProcessor::new();
+        let id = native.create_pipeline().insert_line(1, "x\ny")?.build()?;
+        record(
+            "line_insert_line_multiline",
+            native
+                .process_all(&id, "a\nb")
+                .map_err(|error| core_error(ErrorStage::Execution, error)),
+        );
+    }
+    {
+        let mut native = TextForgeProcessor::new();
+        let id = native.create_pipeline().replace_line(1, "x\ny")?.build()?;
+        record(
+            "line_replace_line_multiline",
+            native
+                .process_all(&id, "a\nb")
+                .map_err(|error| core_error(ErrorStage::Execution, error)),
+        );
+    }
+    {
+        let mut native = TextForgeProcessor::new();
+        let id = native.create_pipeline().keep_lines_matching("[")?.build()?;
+        record(
+            "line_keep_lines_matching_regex",
+            native
+                .process_all(&id, "a\nb")
+                .map_err(|error| core_error(ErrorStage::Execution, error)),
+        );
+    }
+    {
+        let mut native = TextForgeProcessor::new();
+        let id = native
+            .create_pipeline()
+            .delete_lines_matching("[")?
+            .build()?;
+        record(
+            "line_delete_lines_matching_regex",
+            native
+                .process_all(&id, "a\nb")
+                .map_err(|error| core_error(ErrorStage::Execution, error)),
+        );
+    }
+    {
+        let mut native = TextForgeProcessor::new();
+        let id = native.create_pipeline().delete_line(0)?.build()?;
+        record(
+            "line_delete_line_zero",
+            native
+                .process_all(&id, "a\nb")
+                .map_err(|error| core_error(ErrorStage::Execution, error)),
+        );
+    }
+    {
+        let mut native = TextForgeProcessor::new();
+        let id = native.create_pipeline().delete_line(100)?.build()?;
+        record(
+            "line_delete_line_missing",
+            native
+                .process_all(&id, "a\nb")
+                .map_err(|error| core_error(ErrorStage::Execution, error)),
+        );
+    }
+    {
+        let mut native = TextForgeProcessor::new();
+        let id = native.create_pipeline().delete_lines_after(0)?.build()?;
+        record(
+            "line_delete_lines_after_zero",
+            native
+                .process_all(&id, "a\nb")
+                .map_err(|error| core_error(ErrorStage::Execution, error)),
+        );
+    }
+    {
+        let mut native = TextForgeProcessor::new();
+        let id = native.create_pipeline().delete_lines_after(100)?.build()?;
+        record(
+            "line_delete_lines_after_missing",
+            native
+                .process_all(&id, "a\nb")
+                .map_err(|error| core_error(ErrorStage::Execution, error)),
+        );
+    }
+    {
+        let mut native = TextForgeProcessor::new();
+        let id = native.create_pipeline().delete_lines_before(0)?.build()?;
+        record(
+            "line_delete_lines_before_zero",
+            native
+                .process_all(&id, "a\nb")
+                .map_err(|error| core_error(ErrorStage::Execution, error)),
+        );
+    }
+    {
+        let mut native = TextForgeProcessor::new();
+        let id = native.create_pipeline().delete_lines_before(100)?.build()?;
+        record(
+            "line_delete_lines_before_missing",
+            native
+                .process_all(&id, "a\nb")
+                .map_err(|error| core_error(ErrorStage::Execution, error)),
+        );
+    }
+    {
+        let mut native = TextForgeProcessor::new();
+        let id = native.create_pipeline().insert_line(0, "x")?.build()?;
+        record(
+            "line_insert_line_zero",
+            native
+                .process_all(&id, "a\nb")
+                .map_err(|error| core_error(ErrorStage::Execution, error)),
+        );
+    }
+    {
+        let mut native = TextForgeProcessor::new();
+        let id = native.create_pipeline().insert_line(100, "x")?.build()?;
+        record(
+            "line_insert_line_missing",
+            native
+                .process_all(&id, "a\nb")
+                .map_err(|error| core_error(ErrorStage::Execution, error)),
+        );
+    }
+    {
+        let mut native = TextForgeProcessor::new();
+        let id = native.create_pipeline().replace_line(0, "x")?.build()?;
+        record(
+            "line_replace_line_zero",
+            native
+                .process_all(&id, "a\nb")
+                .map_err(|error| core_error(ErrorStage::Execution, error)),
+        );
+    }
+    {
+        let mut native = TextForgeProcessor::new();
+        let id = native.create_pipeline().replace_line(100, "x")?.build()?;
+        record(
+            "line_replace_line_missing",
+            native
+                .process_all(&id, "a\nb")
+                .map_err(|error| core_error(ErrorStage::Execution, error)),
+        );
+    }
+    {
+        let mut native = TextForgeProcessor::new();
+        let id = native.create_pipeline().select_lines(0, 1)?.build()?;
+        record(
+            "line_select_lines_zero",
+            native
+                .process_all(&id, "a\nb")
+                .map_err(|error| core_error(ErrorStage::Execution, error)),
+        );
+    }
+    {
+        let mut native = TextForgeProcessor::new();
+        let id = native.create_pipeline().select_lines(1, 100)?.build()?;
+        record(
+            "line_select_lines_missing",
+            native
+                .process_all(&id, "a\nb")
+                .map_err(|error| core_error(ErrorStage::Execution, error)),
+        );
+    }
+    {
+        let mut native = TextForgeProcessor::new();
+        let id = native.create_pipeline().select_lines(2, 1)?.build()?;
+        record(
+            "line_select_lines_inverted",
+            native
+                .process_all(&id, "a\nb")
+                .map_err(|error| core_error(ErrorStage::Execution, error)),
+        );
+    }
+    {
+        let mut native = TextForgeProcessor::new();
+        let id = native
+            .create_pipeline()
+            .delete_lines_interval(0, 1)?
+            .build()?;
+        record(
+            "line_delete_lines_interval_zero",
+            native
+                .process_all(&id, "a\nb")
+                .map_err(|error| core_error(ErrorStage::Execution, error)),
+        );
+    }
+    {
+        let mut native = TextForgeProcessor::new();
+        let id = native
+            .create_pipeline()
+            .delete_lines_interval(1, 100)?
+            .build()?;
+        record(
+            "line_delete_lines_interval_missing",
+            native
+                .process_all(&id, "a\nb")
+                .map_err(|error| core_error(ErrorStage::Execution, error)),
+        );
+    }
+    {
+        let mut native = TextForgeProcessor::new();
+        let id = native
+            .create_pipeline()
+            .delete_lines_interval(2, 1)?
+            .build()?;
+        record(
+            "line_delete_lines_interval_inverted",
+            native
+                .process_all(&id, "a\nb")
+                .map_err(|error| core_error(ErrorStage::Execution, error)),
+        );
+    }
+    // END GENERATED LINE ERROR ORACLE
     Ok(())
 }

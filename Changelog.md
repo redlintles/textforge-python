@@ -7,6 +7,14 @@ Git history only establishes a version change, not an uploaded release.
 
 ### Added
 
+- Sixteen typed logical-line transforms from TextForge 0.2.0: `apl`, `dln`,
+  `dlna`, `dlnb`, `slnc`, `dlni`, `inl`, `nln`, `rln`, `pln`, `dle`, `klm`,
+  `dlm`, `revln`, `uniqln` and `joinln`. Line indices start at one; ranges are
+  inclusive. `sortln` is not included.
+- Native Rust reference results for every new fluent method, source freshness
+  checks, line-boundary unit cases and installed-wheel tests through both typed
+  and generic portable instructions.
+
 - Typed adapters for Unicode normalization (`unorm`) and named regex replacement
   maps (`rmapd`, `rmape`), delegated to the refreshed portable core.
 
@@ -37,7 +45,7 @@ Git history only establishes a version change, not an uploaded release.
   colored 3.1.1, regex 1.13.1, shell-words 1.1.1 and serde 1.0.229. PyO3 remains
   0.30.1, already the latest stable release checked on 2026-10-30.
 - Refresh both Cargo lockfiles, updating 16 compatible transitive packages.
-  The exact refreshed TextForge snapshot is recorded in `vendor/CORE_REVISION`.
+  The exact refreshed TextForge 0.2.0 snapshot is recorded in `vendor/CORE_REVISION`.
 - Pin development/build tools: maturin 1.16.0, pytest 9.2.0, Ruff 0.17.3, mypy
   2.4.1, build 1.6.1 and twine 7.0.0; use pip 26.2.2 in setup instructions/CI.
 - Upgrade the release Actions to their verified stable tags and migrate macOS

@@ -1,5 +1,5 @@
 {
-  "core_revision": "42cd6aa237e7fae5c873979c974e1ab737469ccf",
+  "core_revision": "3e87c17b623f470be93df9b1f4fcb3300efe167a",
   "source_sha256": {
     "src/api/mod.rs": "bef96ff7ff03b25b077068f070b4c8d36c77a407a1b3ed658a36c68a9f5dfff4",
     "src/api/builder.rs": "def89a0c0b9c861208e0be3188e935c7d256003d64fb0bb1cba595a8fd03c6e2",

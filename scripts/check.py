@@ -25,6 +25,7 @@ def main() -> None:
     run(sys.executable, "-m", "mypy", "python", "tests", "scripts")
     run(sys.executable, "scripts/generate_builder.py", "--check")
     run(sys.executable, "scripts/generate_builder_reference.py", "--check")
+    run(sys.executable, "scripts/generate_line_errors.py", "--check")
     run(sys.executable, "scripts/generate_processor_reference.py", "--check")
     run("cargo", "clippy", "--all-targets", "--features", "test-reference", "--", "-D", "warnings")
     run(sys.executable, "-m", "pytest")
