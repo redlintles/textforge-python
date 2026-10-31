@@ -1,5 +1,5 @@
 {
-  "core_revision": "3cd3fb7705d38bfd142fc7857d4d3c20ff40a24c",
+  "core_revision": "d03b72e06320ec886059c0aacf58d8e9685e9acb",
   "cases": {
     "unicode": {
       "ok": "🍌é\u0000é"

@@ -55,6 +55,21 @@
     }
   },
   {
+    "name": "append_line",
+    "input": "a",
+    "steps": [
+      [
+        "append_line",
+        [
+          "b"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "a\nb"
+    }
+  },
+  {
     "name": "trim_both_sides",
     "input": "   banana   ",
     "steps": [

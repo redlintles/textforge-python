@@ -134,6 +134,14 @@ class Pipeline:
         """
         return self._operation("rmape", _text(name, "name"))
 
+    def append_line(self, text: str | Variable) -> Pipeline:
+        """Append one logical line, preserving the final-terminator convention. Line numbers
+        start at one; see the logical-line guide.
+
+        Matches Rust ``TextForgeBuilderMethods::append_line``.
+        """
+        return self._operation("apl", _text(text, "text"))
+
     def trim_both_sides(self) -> Pipeline:
         """Removes whitespace characters from both the left and right sides of the input.
 

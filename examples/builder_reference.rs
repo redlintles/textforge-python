@@ -62,6 +62,14 @@ fn main() {
         })(),
     );
     record(
+        "append_line",
+        (|| {
+            let mut processor = TextForgeProcessor::new();
+            let id = processor.create_pipeline().append_line("b")?.build()?;
+            processor.process_all(&id, "a")
+        })(),
+    );
+    record(
         "trim_both_sides",
         (|| {
             let mut processor = TextForgeProcessor::new();
