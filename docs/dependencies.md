@@ -2,11 +2,12 @@
 
 Verified against the official crates.io sparse index, PyPI JSON API and GitHub
 release endpoints on 2026-10-30. These are stable, non-yanked Rust releases;
-Python tools and Actions are pinned to the stable releases tested for 0.1.2.
+Python tools and Actions retain the pins from the 0.1.2 audit; the same tool
+versions are used to validate 0.1.3.
 
 ## Rust
 
-| Direct dependency | Required stable version |
+| Direct dependency | Locked version retained for 0.1.3 |
 | --- | --- |
 | PyO3 | 0.30.1 |
 | tempfile | 3.27.0 |
@@ -24,12 +25,14 @@ Python tools and Actions are pinned to the stable releases tested for 0.1.2.
 | rayon | 1.12.0 |
 | evalexpr | 13.1.0 |
 
-The binding still uses the pinned TextForge 0.1.9 source snapshot. Only dependency
-requirements in its copied manifest were refreshed; no core implementation or
-public API was changed. Several direct crates, including PyO3, were already at
-the newest stable version in Cargo.lock and therefore did not need an upgrade.
-Both Rust lockfiles were refreshed. Cargo updated 16 compatible transitive
-packages, including libc, rustix, crossbeam, syn and wasm-bindgen.
+Binding 0.1.3 embeds TextForge 0.2.0 at revision
+`c2ed4b8f4c96c9e3ddc53576a3cdbf6ccd38bc9e`, including the allocation optimizations. The core sources
+are copied from that revision; only its workspace section is removed for the
+independent binding workspace. The existing locked dependency versions and Python
+build/development tool pins are retained. No dependency upgrade is part of 0.1.3.
+
+The release dates and latest-version statements above describe the earlier
+2026-10-30 dependency audit; they are not a fresh claim about registry releases.
 
 ## Python build and development tools
 

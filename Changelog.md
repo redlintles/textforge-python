@@ -3,7 +3,27 @@
 Changes are grouped by binding version. Publication dates are omitted where the
 Git history only establishes a version change, not an uploaded release.
 
-## 0.1.2 — Unreleased
+## 0.1.3 — Unreleased
+
+### Changed
+
+- Embed the optimized TextForge 0.2.0 core at revision
+  `c2ed4b8f4c96c9e3ddc53576a3cdbf6ccd38bc9e`, including reduced temporary strings,
+  preserved borrowed slices and reuse of owned buffers. No public Python API
+  change or dependency upgrade is introduced.
+- Expand pinned source integrity checks to all vendored Rust source files.
+  Preserve prior independent Rust oracle outputs and errors during the refresh.
+- Correct stale core-version references and update installation/release examples
+  to the independently versioned `textforgers` 0.1.3 distribution.
+
+### Validation
+
+- Build/install/test the final release wheel and independently rebuild the source
+  distribution outside the checkout; verify typing resources and native features.
+- Remote platform/interpreter matrix results must pass for the exact release
+  commit before publication. Local checks do not establish Windows/macOS support.
+
+## 0.1.2
 
 ### Added
 

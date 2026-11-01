@@ -4,8 +4,8 @@ Typed Python bindings for [TextForge](https://github.com/redlintles/textforge),
 implemented with PyO3 against its owned portable API. Distribution name:
 `textforgers`; Python import: `textforge`. Requires Python 3.10 or newer.
 
-This checkout prepares **0.1.2**. See [Changelog.md](Changelog.md) for changes
-from 0.1.1 and [the dependency snapshot](docs/dependencies.md) for tested versions.
+This checkout prepares **0.1.3**. See [Changelog.md](Changelog.md) for changes
+since 0.1.2 and [the dependency snapshot](docs/dependencies.md) for tested versions.
 
 For a published release, use `pip install textforgers`; to build this checkout,
 use the commands below. Do not install the unrelated `textforge` distribution as a substitute.
@@ -155,11 +155,11 @@ python3 -m venv .venv
 . .venv/bin/activate
 python -m pip install --upgrade pip==26.2.2
 python -m pip install --group dev
-maturin build --release --locked --sdist --out dist/0.1.2
-python -m pip install --force-reinstall --no-deps --no-index --find-links dist/0.1.2 textforgers==0.1.2
+maturin build --release --locked --sdist --out dist/0.1.3
+python -m pip install --force-reinstall --no-deps --no-index --find-links dist/0.1.3 textforgers==0.1.3
 python scripts/check.py
-python scripts/check_distribution.py --wheel-dir dist/0.1.2 --types
-python -m twine check dist/0.1.2/*
+python scripts/check_distribution.py --wheel-dir dist/0.1.3 --types
+python -m twine check dist/0.1.3/*
 ```
 
 On Windows, activate the environment with `.venv\Scripts\Activate.ps1` in
@@ -227,7 +227,7 @@ See [API parity](docs/parity.md), [ownership and concurrency](docs/lifecycle.md)
 and [supported configurations](docs/compatibility.md). All fourteen binding rules
 and their evidence are tracked in [the compliance record](docs/compliance.md).
 
-## Logical lines in 0.1.2
+## Logical lines (introduced in 0.1.2)
 
 This binding includes TextForge **0.2.0**. Line indices start at **1**:
 

@@ -2,7 +2,8 @@
 
 The machine-readable mapping in `api-parity.json` covers every current public
 builder and processor method and every portable processor, buffer, observer and
-path method. Tests compare method names, the core revision and source hashes,
+path method. Tests compare method names, the core revision and hashes of every vendored Rust
+source file,
 and verify the named Python entry points exist. Source hashes canonicalize CRLF to
 LF only; all other bytes remain significant. Text checkouts use LF through
 .gitattributes, and a regression verifies that real source edits still fail. After an approved core update,
@@ -52,3 +53,13 @@ stream ownership, callback cycles/replacement, report preservation, re-entrancy,
 concurrent mutation and compiled sharing. Linux-only descriptor checks verify
 spilled files close on both failure and explicit close. Native Windows/Unix path
 branches are platform-gated. Remote platform checks require CI execution.
+
+
+## 0.1.3 optimized core refresh
+
+The API mapping is unchanged; the embedded engine moves to the exact optimized
+TextForge 0.2.0 revision in CORE_REVISION. The previous builder and processor
+oracle case outputs/errors are retained. Only the processor fixture's revision
+marker changes; independent Rust execution must still reproduce every old value.
+The source integrity map now covers transform/helper implementations as well as
+public API files, so an API-compatible engine edit cannot evade freshness checks.

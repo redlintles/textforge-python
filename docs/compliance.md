@@ -18,7 +18,7 @@ checks; it does not claim to reconstruct historical approvals or remote CI runs.
 | 9. Compatibility | compatibility.md consolidates exact core revision, Rust minimum, CPython versions, platform/architecture and enabled features; CI tests the configured matrix |
 | 10. Errors/conversions | Checked unsigned instruction/count conversion, complete portable error fields, lossless Unix bytes/surrogateescape and Windows wide/surrogatepass paths |
 | 11. Ownership/concurrency | lifecycle.md; consumed alias invalidation, idempotent close/context managers, stream ownership, callback cycle collection, thread checks, reentrant/concurrent borrow rejection and failed-spool cleanup tests |
-| 12. Parity tests | 61 fluent Rust cases plus 19 processor result/error cases; every error field compared; pinned method/source checks, optional capabilities and edge cases exercised |
+| 12. Parity tests | 80 fluent Rust cases plus 41 processor result/error cases; every error field compared; pinned method/source checks, optional capabilities and edge cases exercised |
 | 13. Distribution | check_distribution.py asserts wheel typing/native/license files and installed capabilities, and type-checks an external client; CI installs wheels and independently rebuilds/installs/tests sdist |
 | 14. Human-readable code | Focused native/Python modules, direct delegation, isolated runtime glue, explicit typed generated methods with source/regeneration command and freshness checks |
 
@@ -33,3 +33,11 @@ The 0.1.2 preparation refreshes verified stable dependency versions and both Rus
 lockfiles, pins direct Python development tools, migrates macOS CI to macos-15,
 and adds source/artifact/installed version agreement checks. See
 [dependency versions](dependencies.md) and [version history](../Changelog.md).
+
+
+For 0.1.3, the maintainer explicitly authorized refreshing the core snapshot and
+release artifacts. All 224 embedded Rust source files are hashed, and a regression
+checks that the integrity map cannot omit engine implementations. Previous oracle
+case values remain unchanged. Version numbers identify the Python distribution
+(0.1.3) and core (0.2.0) independently. Remote CI and publisher protections remain
+external release checks; local validation does not establish their current state.

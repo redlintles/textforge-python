@@ -49,9 +49,11 @@ excluding `src/bindings`. The core manifest's original workspace section was
 removed so that it participates as a path dependency in this independent workspace.
 Large benchmark data files are omitted; the unit/integration tests generate their
 own data or use the included pipeline fixtures. There are no core implementation
-changes in the snapshot. For binding 0.1.2, dependency lower bounds in the copied
-manifest were refreshed to the verified stable versions; these packaging changes
-and the independent lockfile are recorded in dependencies.md.
+changes in the snapshot. Binding 0.1.3 uses the optimized core 0.2.0 revision
+recorded in CORE_REVISION, with its original dependency bounds and the existing
+locked dependency versions. The integrity map hashes every vendored Rust source
+file, including transform implementations and their tests; it is not limited to
+public API files. See dependencies.md.
 
 To update, obtain the desired core revision, replace the snapshot from tracked
 files only, remove the original workspace section again, update CORE_REVISION,

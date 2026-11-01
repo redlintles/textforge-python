@@ -172,3 +172,14 @@ unrelated wheels. Rust 1.89 remains the verified source-build minimum.
 
 Publication, TestPyPI uploads, tags and pushes are left to the maintainer. Review
 remote matrix jobs and account/environment setup using releasing.md before launch.
+
+
+## 2026-11-01: prepare binding 0.1.3
+
+The maintainer authorized refreshing the binding after the core 0.2.0 release.
+The optimized core is copied from the corrected version commit pinned in
+CORE_REVISION; no engine implementation is edited in the binding. The adapter's
+public signatures remain unchanged. Previous oracle outputs and errors are kept
+as the behavioral reference, and source integrity hashes cover all Rust sources.
+Release wheel/sdist and compatibility validation are recorded in releasing.md.
+No push, tag or package upload is performed by this preparation.

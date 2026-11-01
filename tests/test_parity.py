@@ -81,6 +81,13 @@ def test_method_mapping_and_pinned_sources_are_current() -> None:
             assert callable(getattr(getattr(textforge, cls), method))
 
 
+def test_integrity_map_covers_every_embedded_engine_source() -> None:
+    mapping = json.loads((ROOT / "docs/api-parity.json").read_text(encoding="utf-8"))
+    core = ROOT / "vendor/textforge"
+    sources = {path.relative_to(core).as_posix() for path in (core / "src").rglob("*.rs")}
+    assert set(mapping["source_sha256"]) == sources
+
+
 def assert_reference(name: str, operation: Callable[[], str]) -> None:
     expected = REFERENCE["cases"][name]
     if "ok" in expected:
