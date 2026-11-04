@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TypeAlias
+from typing import TypeAlias, overload
 
 from . import _native
 from ._arguments import _instruction, _number, _text, _value
@@ -32,6 +32,7 @@ from ._native import (
 from ._observers import Observers
 from ._paths import Path
 from ._processor import BatchPool, BufferTask, FileTask, Processor
+from ._replace_maps import ReplaceMapBody, ReplaceMapBuilder, _configure_map, _ReplaceMapDefinition
 
 Argument: TypeAlias = str | int | Variable | Instruction
 
@@ -54,6 +55,8 @@ __all__ = [
     "Instruction",
     "Pipeline",
     "Processor",
+    "ReplaceMapBuilder",
+    "ReplaceMapBody",
     "TextForgeError",
     "Variable",
     "__version__",
@@ -80,7 +83,7 @@ class Pipeline:
     'é!'
     """
 
-    _nodes: tuple[Instruction | _Group, ...]
+    _nodes: tuple[Instruction | _Group | _ReplaceMapDefinition, ...]
     _depth: int
     _processor: Processor | None
 
@@ -91,7 +94,7 @@ class Pipeline:
         object.__setattr__(self, "_depth", 0)
         object.__setattr__(self, "_processor", None)
 
-    def _append(self, node: Instruction | _Group) -> Pipeline:
+    def _append(self, node: Instruction | _Group | _ReplaceMapDefinition) -> Pipeline:
         depth = max(self._depth, node.body._depth + 1) if isinstance(node, _Group) else self._depth
         if depth > 32:
             raise ValueError("pipeline group nesting exceeds 32")
@@ -104,6 +107,34 @@ class Pipeline:
     def _operation(self, name: str, *arguments: Argument) -> Pipeline:
         return self._append(Instruction(name, *arguments))
 
+    @overload
+    def define_replace_map(self, name: str | Variable, configure: ReplaceMapBody) -> Pipeline: ...
+
+    @overload
+    def define_replace_map(
+        self, name: str | Variable, configure: str | Variable, replacement: str | Variable
+    ) -> Pipeline: ...
+
+    def define_replace_map(
+        self,
+        name: str | Variable,
+        configure: ReplaceMapBody | str | Variable,
+        replacement: str | Variable | None = None,
+    ) -> Pipeline:
+        """Configure ordered rules with ``map.add_replace(...).end()``.
+
+        The former three-argument form remains supported; prefer this callback
+        or add_replace_rule() for a single rule. Callbacks are never retained.
+        """
+        name = _text(name, "name")
+        if not callable(configure):
+            if replacement is None:
+                raise TypeError("define_replace_map requires a callback or pattern and replacement")
+            return self.add_replace_rule(name, configure, replacement)
+        if replacement is not None:
+            raise TypeError("a replace map callback does not accept a third argument")
+        return self._append(_configure_map(name, configure))
+
     # BEGIN GENERATED BUILDER METHODS
     def normalize_unicode(self, mode: str | Variable) -> Pipeline:
         """Normalize the complete text to `nfc`, `nfd`, `nfkc` or `nfkd`. Mode names are
@@ -113,12 +144,12 @@ class Pipeline:
         """
         return self._operation("unorm", _text(mode, "mode"))
 
-    def define_replace_map(
+    def add_replace_rule(
         self, name: str | Variable, pattern: str | Variable, replacement: str | Variable
     ) -> Pipeline:
-        """Define replace map.
+        """Add replace rule.
 
-        Matches Rust ``TextForgeBuilderMethods::define_replace_map``.
+        Matches Rust ``TextForgeBuilderMethods::add_replace_rule``.
         """
         return self._operation(
             "rmapd",
@@ -801,6 +832,8 @@ class Pipeline:
         for node in self._nodes:
             if isinstance(node, Instruction):
                 plan.add(node)
+            elif isinstance(node, _ReplaceMapDefinition):
+                plan.define_replace_map(node.name, node.rules)
             elif node.kind == "block":
                 plan.block(node.value, node.body._lower())
             else:

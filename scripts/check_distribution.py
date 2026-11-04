@@ -24,11 +24,16 @@ REQUIRED = {
     "textforge/_buffers.py",
     "textforge/_observers.py",
     "textforge/_processor.py",
+    "textforge/_replace_maps.py",
 }
 
 CLIENT = """from textforge import (BatchPool, BufferOptions, BufferTask, FilePath, FileTask,
-    Observation, Observers, Pipeline, PortableBuffer, Processor, TextForgeError, features)
+    Observation, Observers, Pipeline, PortableBuffer, Processor, ReplaceMapBuilder,
+    TextForgeError, features)
 processor = Processor()
+def configure_map(map: ReplaceMapBuilder) -> None:
+    map.add_replace("a", "b").add_replace("b", "c").end()
+map_plan = Pipeline().define_replace_map("m", configure_map).execute_replace_map("m")
 plan: Pipeline = processor.create_pipeline().add_to_end("!")
 identifier: str = plan.build()
 native_path: FilePath = FilePath.from_text("file.txt")

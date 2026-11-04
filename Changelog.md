@@ -5,12 +5,22 @@ Git history only establishes a version change, not an uploaded release.
 
 ## 0.1.3 — Unreleased
 
+### Scoped replacement maps and debug fixes
+
+- Add typed `ReplaceMapBuilder` and `define_replace_map(name, configure)`;
+  preserve positional three-argument calls and expose `add_replace_rule`.
+- Stage definitions through the portable API; reject unfinished/empty scopes
+  and test callback failure, ownership, execution and text/bytecode round-trips.
+- Resolve actual block names once during debug execution, including variables
+  and whitespace, without destructive context inspection.
+- Preserve quoted parameters in text exports and match existing raw/rfw/null
+  opcode registry assignments. Regenerate old files with incorrect opcodes.
+
 ### Changed
 
 - Embed the optimized TextForge 0.2.0 core at revision
   `c2ed4b8f4c96c9e3ddc53576a3cdbf6ccd38bc9e`, including reduced temporary strings,
-  preserved borrowed slices and reuse of owned buffers. No public Python API
-  change or dependency upgrade is introduced.
+  preserved borrowed slices and reuse of owned buffers. This baseline refresh requires no dependency upgrade.
 - Expand pinned source integrity checks to all vendored Rust source files.
   Preserve prior independent Rust oracle outputs and errors during the refresh.
 - Correct stale core-version references and update installation/release examples

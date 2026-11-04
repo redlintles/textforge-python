@@ -171,6 +171,22 @@ impl Plan {
             .add(instruction.spec.clone())
             .map_err(|e| error(py, e))
     }
+    fn define_replace_map(
+        &mut self,
+        py: Python<'_>,
+        name: &Bound<'_, PyAny>,
+        rules: Vec<(Py<PyAny>, Py<PyAny>)>,
+    ) -> PyResult<()> {
+        let rules = rules
+            .iter()
+            .map(|(pattern, replacement)| {
+                Ok((argument(pattern.bind(py))?, argument(replacement.bind(py))?))
+            })
+            .collect::<PyResult<Vec<_>>>()?;
+        self.inner
+            .define_replace_map(argument(name)?, rules)
+            .map_err(|e| error(py, e))
+    }
     fn block(&mut self, name: String, body: &mut Self) {
         self.inner.block(name, std::mem::take(&mut body.inner));
     }

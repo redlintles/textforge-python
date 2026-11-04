@@ -22,8 +22,20 @@ processor; its terminal `build()` validates/registers and returns an ID. A
 standalone `Pipeline` can use `build(processor)`. `push_token(Instruction(...))`
 accepts an owned description corresponding to Rust's generic push_token.
 
+`define_replace_map(name, configure)` passes a `ReplaceMapBuilder` to a synchronous
+callback. Chain `add_replace(pattern, replacement)` and finish with `end()`.
+The callback returns `None`; it is invoked once and never retained. Empty,
+unfinished, escaped or double-ended scopes fail without changing the original
+immutable pipeline. `end()` emits no pipeline halt instruction. Rules retain
+insertion order, variable interpolation and non-cascading engine semantics.
+Use `execute_replace_map(name)` to apply them. The old three-argument form remains
+supported; `add_replace_rule` is the explicit single-rule operation.
+
 | Method | Parameters |
 | --- | --- |
+| `define_replace_map` | `name: str \| Variable, configure: ReplaceMapBody` (legacy three-argument form also supported) |
+| `add_replace_rule` | `name: str \| Variable, pattern: str \| Variable, replacement: str \| Variable` |
+| `execute_replace_map` | `name: str \| Variable` |
 | `add_to_beginning` | `text: str \| Variable` |
 | `add_to_end` | `text: str \| Variable` |
 | `block_assoc` | `block_name: str, f: PipelineBody` |

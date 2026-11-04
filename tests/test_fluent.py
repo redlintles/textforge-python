@@ -9,7 +9,15 @@ from pathlib import Path
 from typing import Any, get_type_hints
 
 import pytest
-from textforge import Instruction, Pipeline, Processor, TextForgeError, Variable, get_var
+from textforge import (
+    Instruction,
+    Pipeline,
+    Processor,
+    ReplaceMapBuilder,
+    TextForgeError,
+    Variable,
+    get_var,
+)
 
 REFERENCE: list[dict[str, Any]] = json.loads(
     (Path(__file__).parent / "fixtures/builder_reference.json").read_text(encoding="utf-8")
@@ -25,6 +33,14 @@ def argument(value: object) -> object:
         return plan(value["body"])
     if "instruction" in value:
         return plan([value["instruction"]])
+    if "map" in value:
+
+        def configure(builder: ReplaceMapBuilder) -> None:
+            for pattern, replacement in value["map"]:
+                builder.add_replace(pattern, replacement)
+            builder.end()
+
+        return configure
     raise AssertionError(f"Unknown fixture argument: {value!r}")
 
 

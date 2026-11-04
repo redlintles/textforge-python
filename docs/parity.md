@@ -18,6 +18,7 @@ to hide an adapter failure.
 | `TextForgeProcessor::new`, Default | `Processor()` | Independent registry |
 | `TextForgeBuilder::new`, `create_pipeline` | `processor.create_pipeline()` | Immutable owned plan retaining the processor for build; no long-lived Rust borrow |
 | Builder operation/group methods | Same `Pipeline` names | Explicit typed methods; edits return new plans; group callbacks run once during construction |
+| `define_replace_map`, `ReplaceMapBuilder::add_replace/end` | Scoped callback with `add_replace/end`; `add_replace_rule` for single rules | Checked portable rule staging; temporary callback scope |
 | `push_token` | `Pipeline.push_token(Instruction(...))` | Owned description instead of a private trait object |
 | `build` | `plan.build()` or `plan.build(processor)` | Validate/register atomically; return a new ID; plan remains reusable |
 | Independent portable plan/compiled executable | `Pipeline().compile()` | Executable independent of registry and source plan |

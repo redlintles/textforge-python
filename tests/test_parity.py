@@ -75,6 +75,7 @@ def test_method_mapping_and_pinned_sources_are_current() -> None:
         "FilePath",
         "PortableBuffer",
         "Observers",
+        "ReplaceMapBuilder",
     ):
         for target in mapping[group].values():
             cls, method = target.split(".")

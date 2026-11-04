@@ -246,3 +246,21 @@ assert pipeline("é\n\né\n🍌") == "é | 🍌"
 
 See [line operations](docs/lines.md) for every typed method, terminator rules and
 error behavior. The exact core commit is pinned in `vendor/CORE_REVISION`.
+
+## Scoped replacement maps
+
+```python
+from textforge import Pipeline, ReplaceMapBuilder
+
+def animals(map: ReplaceMapBuilder) -> None:
+    map.add_replace("cat", "wolf").add_replace("wolf", "dog").end()
+
+plan = Pipeline().define_replace_map("animals", animals).execute_replace_map("animals")
+assert plan.compile()("cat wolf") == "wolf dog"
+```
+
+Configuration runs synchronously once, with a temporary builder. `end()` closes
+configuration and does not halt execution. Empty or unfinished definitions and
+reuse outside the callback are rejected; callback failures append nothing.
+The previous three-argument form remains supported; `add_replace_rule` explicitly
+adds a single rule. See [the builder API](docs/builder-api.md).
