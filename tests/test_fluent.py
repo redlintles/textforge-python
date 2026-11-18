@@ -19,6 +19,9 @@ from textforge import (
     get_var,
 )
 
+# File instructions need real files; tests/test_core_040.py checks them.
+FILE_INSTRUCTIONS = {"pipeline_join", "write_to_file", "append_file", "prepend_file", "insert_file"}
+
 REFERENCE: list[dict[str, Any]] = json.loads(
     (Path(__file__).parent / "fixtures/builder_reference.json").read_text(encoding="utf-8")
 )
@@ -33,6 +36,8 @@ def argument(value: object) -> object:
         return plan(value["body"])
     if "instruction" in value:
         return plan([value["instruction"]])
+    if "token" in value:
+        return plan([value["token"]])
     if "map" in value:
 
         def configure(builder: ReplaceMapBuilder) -> None:
@@ -67,7 +72,7 @@ def test_complete_rust_builder_surface_has_explicit_typed_methods() -> None:
     root = Path(__file__).resolve().parents[1]
     rust = (root / "vendor/textforge/src/api/mod.rs").read_text(encoding="utf-8")
     names = set(re.findall(r"^    fn (\w+)(?:<[^\n]*>)?\(", rust, re.MULTILINE)) - {"push_token"}
-    assert names == {case["name"] for case in REFERENCE}
+    assert names == {case["name"] for case in REFERENCE} & names | FILE_INSTRUCTIONS
     for name in names:
         method = getattr(Pipeline, name)
         signature = inspect.signature(method)
@@ -84,7 +89,8 @@ def test_complete_rust_builder_surface_has_explicit_typed_methods() -> None:
         "text_to_insert",
     ]
     assert get_type_hints(Pipeline.add_to_beginning)["text"] == str | Variable
-    assert get_type_hints(Pipeline.repeat)["times"] == int | Variable
+    assert get_type_hints(Pipeline.repeat)["times"] == int | str | Variable
+    assert get_type_hints(Pipeline.on_line)["inner"] == Pipeline | Instruction
 
 
 @pytest.mark.parametrize("text", ["", "é", "🍌", "e\u0301"])
@@ -112,7 +118,8 @@ def test_keywords_variables_and_numeric_normalization() -> None:
     assert (
         Pipeline().eval(expr="2 + 3", var_name="n").repeat(get_var("n")).compile()("x") == "xxxxx"
     )
-    assert Pipeline().insert(index=0, text_to_insert="🍌").compile()("éx") == "é🍌x"
+    # Index 0 inserts at the start since TextForge 0.3.2; index 1 after the second character.
+    assert Pipeline().insert(index=0, text_to_insert="🍌").compile()("éx") == "🍌éx"
 
 
 def test_callback_groups_are_eager_owned_and_reusable() -> None:
@@ -170,7 +177,7 @@ def test_named_argument_validation_and_overflow() -> None:
     for value in invalid_text:
         with pytest.raises(TypeError, match="text must be str or Variable"):
             Pipeline().add_to_beginning(value)  # type: ignore[arg-type]
-    invalid_number: tuple[object, ...] = ("2", True, 1.5, None)
+    invalid_number: tuple[object, ...] = (True, 1.5, None, b"2")
     for value in invalid_number:
         with pytest.raises(TypeError, match="times must be"):
             Pipeline().repeat(value)  # type: ignore[arg-type]
@@ -183,6 +190,23 @@ def test_named_argument_validation_and_overflow() -> None:
         Pipeline().val("n", True)
     with pytest.raises(TypeError):
         Pipeline().iter(2, "atb")  # type: ignore[arg-type]
+    for nested in (get_var("x"), "tbs"):
+        with pytest.raises(TypeError, match="inner must be"):
+            Pipeline().try_ignore(nested)  # type: ignore[arg-type]
+
+
+def test_numeric_parameters_accept_expressions_and_templates() -> None:
+    assert Pipeline().repeat("[[1 + 1]]").compile()("é") == "éé"
+    assert Pipeline().var("n", 3).repeat("{{n}}").compile()("é") == "ééé"
+    last = Pipeline().on_line("[[__LINES__ - 1]]", Pipeline().to_uppercase_all())
+    assert last.compile()("a\nb\nc") == "a\nb\nC"
+    with pytest.raises(TextForgeError) as raised:
+        Pipeline().repeat("two").compile()
+    assert raised.value.stage == "validation"
+    assert raised.value.kind == "IncompatibleTypeError"
+    with pytest.raises(TextForgeError) as raised:
+        Pipeline().delete_single("[[0 - 5]]").compile()("abc")
+    assert raised.value.stage == "execution"
 
 
 def test_named_structural_rules_still_validate_atomically() -> None:

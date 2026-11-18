@@ -1,6 +1,7 @@
 """Logical-line operations through the installed typed Python adapter.
 
 Expected values also have independent native Rust fixtures in test_fluent.py.
+Line numbers start at 0 since TextForge 0.3.2.
 """
 
 from __future__ import annotations
@@ -24,15 +25,15 @@ def test_apl_line_boundaries(source: str, expected: str) -> None:
     ("source", "expected"), [("a\nb", "b"), ("a\r\nb\r\n", "b\r\n"), ("\n", ""), ("é🍌é", "")]
 )
 def test_dln_line_boundaries(source: str, expected: str) -> None:
-    fluent = Pipeline().delete_line(1).compile()
-    generic = Pipeline(Instruction("dln", 1)).compile()
+    fluent = Pipeline().delete_line(0).compile()
+    generic = Pipeline(Instruction("dln", 0)).compile()
     assert fluent(source) == generic(source) == expected
     assert fluent(source) == expected
 
 
-def test_dln_rejects_zero_index() -> None:
+def test_dln_rejects_line_past_the_end() -> None:
     with pytest.raises(TextForgeError) as error:
-        Pipeline().delete_line(0).compile()("a\nb")
+        Pipeline().delete_line(2).compile()("a\nb")
     assert error.value.stage == "execution"
 
 
@@ -40,15 +41,15 @@ def test_dln_rejects_zero_index() -> None:
     ("source", "expected"), [("a\nb", "a\n"), ("é🍌é\r\nb\r\n", "é🍌é\r\n"), ("\n\n", "\n")]
 )
 def test_dlna_line_boundaries(source: str, expected: str) -> None:
-    fluent = Pipeline().delete_lines_after(1).compile()
-    generic = Pipeline(Instruction("dlna", 1)).compile()
+    fluent = Pipeline().delete_lines_after(0).compile()
+    generic = Pipeline(Instruction("dlna", 0)).compile()
     assert fluent(source) == generic(source) == expected
     assert fluent(source) == expected
 
 
-def test_dlna_rejects_zero_index() -> None:
+def test_dlna_rejects_line_past_the_end() -> None:
     with pytest.raises(TextForgeError) as error:
-        Pipeline().delete_lines_after(0).compile()("a\nb")
+        Pipeline().delete_lines_after(2).compile()("a\nb")
     assert error.value.stage == "execution"
 
 
@@ -56,15 +57,15 @@ def test_dlna_rejects_zero_index() -> None:
     ("source", "expected"), [("a\nb", "b"), ("a\r\né🍌é\r\n", "é🍌é\r\n"), ("\n\n", "\n")]
 )
 def test_dlnb_line_boundaries(source: str, expected: str) -> None:
-    fluent = Pipeline().delete_lines_before(2).compile()
-    generic = Pipeline(Instruction("dlnb", 2)).compile()
+    fluent = Pipeline().delete_lines_before(1).compile()
+    generic = Pipeline(Instruction("dlnb", 1)).compile()
     assert fluent(source) == generic(source) == expected
     assert fluent(source) == expected
 
 
-def test_dlnb_rejects_zero_index() -> None:
+def test_dlnb_rejects_line_past_the_end() -> None:
     with pytest.raises(TextForgeError) as error:
-        Pipeline().delete_lines_before(0).compile()("a\nb")
+        Pipeline().delete_lines_before(2).compile()("a\nb")
     assert error.value.stage == "execution"
 
 
@@ -72,15 +73,15 @@ def test_dlnb_rejects_zero_index() -> None:
     ("source", "expected"), [("a\nb\nc", "b\n"), ("a\r\né🍌é\r\nc", "é🍌é\r\n"), ("\n\n", "\n")]
 )
 def test_slnc_line_boundaries(source: str, expected: str) -> None:
-    fluent = Pipeline().select_lines(2, 2).compile()
-    generic = Pipeline(Instruction("slnc", 2, 2)).compile()
+    fluent = Pipeline().select_lines(1, 1).compile()
+    generic = Pipeline(Instruction("slnc", 1, 1)).compile()
     assert fluent(source) == generic(source) == expected
     assert fluent(source) == expected
 
 
-def test_slnc_rejects_zero_index() -> None:
+def test_slnc_rejects_line_past_the_end() -> None:
     with pytest.raises(TextForgeError) as error:
-        Pipeline().select_lines(0, 0).compile()("a\nb")
+        Pipeline().select_lines(2, 2).compile()("a\nb")
     assert error.value.stage == "execution"
 
 
@@ -88,15 +89,15 @@ def test_slnc_rejects_zero_index() -> None:
     ("source", "expected"), [("a\nb\nc", "a\nc"), ("a\r\né🍌é\r\nc", "a\r\nc"), ("\n\n", "\n")]
 )
 def test_dlni_line_boundaries(source: str, expected: str) -> None:
-    fluent = Pipeline().delete_lines_interval(2, 2).compile()
-    generic = Pipeline(Instruction("dlni", 2, 2)).compile()
+    fluent = Pipeline().delete_lines_interval(1, 1).compile()
+    generic = Pipeline(Instruction("dlni", 1, 1)).compile()
     assert fluent(source) == generic(source) == expected
     assert fluent(source) == expected
 
 
-def test_dlni_rejects_zero_index() -> None:
+def test_dlni_rejects_line_past_the_end() -> None:
     with pytest.raises(TextForgeError) as error:
-        Pipeline().delete_lines_interval(0, 0).compile()("a\nb")
+        Pipeline().delete_lines_interval(2, 2).compile()("a\nb")
     assert error.value.stage == "execution"
 
 
@@ -105,15 +106,15 @@ def test_dlni_rejects_zero_index() -> None:
     [("a\nb", "a\nx\nb"), ("é🍌é", "é🍌é\nx"), ("a\r\nb\r\n", "a\r\nx\r\nb\r\n"), ("\n", "\nx\n")],
 )
 def test_inl_line_boundaries(source: str, expected: str) -> None:
-    fluent = Pipeline().insert_line(2, "x").compile()
-    generic = Pipeline(Instruction("inl", 2, "x")).compile()
+    fluent = Pipeline().insert_line(1, "x").compile()
+    generic = Pipeline(Instruction("inl", 1, "x")).compile()
     assert fluent(source) == generic(source) == expected
     assert fluent(source) == expected
 
 
-def test_inl_rejects_zero_index() -> None:
+def test_inl_rejects_line_past_the_end() -> None:
     with pytest.raises(TextForgeError) as error:
-        Pipeline().insert_line(0, "x").compile()("a\nb")
+        Pipeline().insert_line(3, "x").compile()("a\nb")
     assert error.value.stage == "execution"
 
 
@@ -137,15 +138,15 @@ def test_nln_line_boundaries(source: str, expected: str) -> None:
     ("source", "expected"), [("a\nb", "a\nx"), ("a\r\nb\r\n", "a\r\nx\r\n"), ("\n\n", "\nx\n")]
 )
 def test_rln_line_boundaries(source: str, expected: str) -> None:
-    fluent = Pipeline().replace_line(2, "x").compile()
-    generic = Pipeline(Instruction("rln", 2, "x")).compile()
+    fluent = Pipeline().replace_line(1, "x").compile()
+    generic = Pipeline(Instruction("rln", 1, "x")).compile()
     assert fluent(source) == generic(source) == expected
     assert fluent(source) == expected
 
 
-def test_rln_rejects_zero_index() -> None:
+def test_rln_rejects_line_past_the_end() -> None:
     with pytest.raises(TextForgeError) as error:
-        Pipeline().replace_line(0, "x").compile()("a\nb")
+        Pipeline().replace_line(2, "x").compile()("a\nb")
     assert error.value.stage == "execution"
 
 
@@ -248,3 +249,26 @@ def test_posix_classes_after_pipeline_interpolation() -> None:
     delete = Pipeline().delete_lines_matching(r"^\[[:alpha:\]]+$").compile()
     assert keep("abc\r\n123\nXYZ") == "abc\r\nXYZ"
     assert delete("abc\r\n123\nXYZ") == "123\n"
+
+
+@pytest.mark.parametrize(
+    ("method", "arguments", "expected"),
+    [
+        ("delete_line", (0,), "b"),
+        ("delete_lines_after", (0,), "a\n"),
+        ("delete_lines_before", (0,), "a\nb"),
+        ("select_lines", (0, 0), "a\n"),
+        ("delete_lines_interval", (0, 0), "b"),
+        ("insert_line", (0, "x"), "x\na\nb"),
+        ("replace_line", (0, "x"), "x\nb"),
+    ],
+)
+def test_line_zero_is_the_first_line(
+    method: str, arguments: tuple[int | str, ...], expected: str
+) -> None:
+    assert getattr(Pipeline(), method)(*arguments).compile()("a\nb") == expected
+
+
+def test_line_interval_end_past_the_last_line_is_clamped() -> None:
+    assert Pipeline().select_lines(1, 99).compile()("a\nb\nc") == "b\nc"
+    assert Pipeline().delete_lines_interval(1, 99).compile()("a\nb\nc") == "a\n"

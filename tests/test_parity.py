@@ -68,6 +68,13 @@ def test_method_mapping_and_pinned_sources_are_current() -> None:
     processor |= set(re.findall(r"^    pub fn (\w+)", source, re.MULTILINE))
     assert set(mapping["builder"]) == builder
     assert set(mapping["processor"]) == processor
+    portable = set()
+    for name in ("processor", "buffered", "watchers"):
+        source = (ROOT / f"vendor/textforge/src/api/portable/{name}.rs").read_text(encoding="utf-8")
+        for block in source.split("impl PortableProcessor {")[1:]:
+            body = block.split("\n}\n")[0]
+            portable |= set(re.findall(r"^    pub fn (\w+)", body, re.MULTILINE))
+    assert set(mapping["portable_processor"]) == portable
     for group in (
         "builder",
         "processor",

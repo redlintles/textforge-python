@@ -13,24 +13,67 @@ fn hex(text: &str) -> String {
         .map(|byte| format!("{byte:02x}"))
         .collect()
 }
-fn record(name: &str, result: Result<String, BindingError>) {
-    match result {
+/// Every field the Python exception carries, from a portable or a core error.
+struct Fields {
+    code: u16,
+    stage: ErrorStage,
+    message: String,
+    instruction: String,
+    input: String,
+    kind: String,
+    cause: Option<String>,
+    hint: Option<String>,
+    ignorable: bool,
+    report: String,
+}
+impl From<BindingError> for Fields {
+    fn from(e: BindingError) -> Self {
+        Fields {
+            code: e.code,
+            stage: e.stage,
+            message: e.message,
+            instruction: e.instruction,
+            input: e.input,
+            kind: e.details.kind.clone(),
+            cause: e.details.cause.clone(),
+            hint: e.details.hint.clone(),
+            ignorable: e.details.ignorable,
+            report: e.details.report.clone(),
+        }
+    }
+}
+fn optional(value: &Option<String>) -> String {
+    value.as_deref().map_or_else(|| "-".to_owned(), hex)
+}
+fn record<E: Into<Fields>>(name: &str, result: Result<String, E>) {
+    match result.map_err(Into::into) {
         Ok(text) => println!("REF\t{name}\tok\t{}", hex(&text)),
         Err(e) => println!(
-            "REF\t{name}\terror\t{}\t{:?}\t{}\t{}\t{}",
+            "REF\t{name}\terror\t{}\t{:?}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
             e.code,
             e.stage,
             hex(&e.message),
             hex(&e.instruction),
-            hex(&e.input)
+            hex(&e.input),
+            hex(&e.kind),
+            optional(&e.cause),
+            optional(&e.hint),
+            e.ignorable,
+            hex(&e.report),
         ),
     }
 }
-fn core_error(stage: ErrorStage, e: TextForgeError) -> BindingError {
-    BindingError {
+/// The fields `BindingError` takes from a core error (independently of the adapter).
+fn core_error(stage: ErrorStage, e: TextForgeError) -> Fields {
+    Fields {
         stage,
         code: e.error_code.get_error_code(),
         message: e.error_code.message().to_string(),
+        kind: e.error_code.name().to_owned(),
+        cause: e.cause().map(str::to_owned),
+        hint: e.error_code.hint().map(str::to_owned),
+        ignorable: e.is_ignorable(),
+        report: e.report().color(false).to_string(),
         instruction: e.instruction.into_owned(),
         input: e.input.into_owned(),
     }
@@ -143,7 +186,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         core.process_all_with_watchers(&id, "x", &mut watchers, &report)
             .map_err(|e| core_error(ErrorStage::Execution, e)),
     );
-    record("report", Ok(std::fs::read_to_string(report)?));
+    record::<Fields>("report", Ok(std::fs::read_to_string(report)?));
     let mut observers = portable::Observers::new();
     observers.set(
         "bad".into(),
@@ -265,9 +308,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     {
         let mut native = TextForgeProcessor::new();
-        let id = native.create_pipeline().delete_line(0)?.build()?;
+        let id = native.create_pipeline().delete_line(2)?.build()?;
         record(
-            "line_delete_line_zero",
+            "line_delete_line_past_end",
             native
                 .process_all(&id, "a\nb")
                 .map_err(|error| core_error(ErrorStage::Execution, error)),
@@ -285,9 +328,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     {
         let mut native = TextForgeProcessor::new();
-        let id = native.create_pipeline().delete_lines_after(0)?.build()?;
+        let id = native.create_pipeline().delete_lines_after(2)?.build()?;
         record(
-            "line_delete_lines_after_zero",
+            "line_delete_lines_after_past_end",
             native
                 .process_all(&id, "a\nb")
                 .map_err(|error| core_error(ErrorStage::Execution, error)),
@@ -305,9 +348,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     {
         let mut native = TextForgeProcessor::new();
-        let id = native.create_pipeline().delete_lines_before(0)?.build()?;
+        let id = native.create_pipeline().delete_lines_before(2)?.build()?;
         record(
-            "line_delete_lines_before_zero",
+            "line_delete_lines_before_past_end",
             native
                 .process_all(&id, "a\nb")
                 .map_err(|error| core_error(ErrorStage::Execution, error)),
@@ -325,9 +368,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     {
         let mut native = TextForgeProcessor::new();
-        let id = native.create_pipeline().insert_line(0, "x")?.build()?;
+        let id = native.create_pipeline().insert_line(3, "x")?.build()?;
         record(
-            "line_insert_line_zero",
+            "line_insert_line_past_end",
             native
                 .process_all(&id, "a\nb")
                 .map_err(|error| core_error(ErrorStage::Execution, error)),
@@ -345,9 +388,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     {
         let mut native = TextForgeProcessor::new();
-        let id = native.create_pipeline().replace_line(0, "x")?.build()?;
+        let id = native.create_pipeline().replace_line(2, "x")?.build()?;
         record(
-            "line_replace_line_zero",
+            "line_replace_line_past_end",
             native
                 .process_all(&id, "a\nb")
                 .map_err(|error| core_error(ErrorStage::Execution, error)),
@@ -365,9 +408,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     {
         let mut native = TextForgeProcessor::new();
-        let id = native.create_pipeline().select_lines(0, 1)?.build()?;
+        let id = native.create_pipeline().select_lines(2, 2)?.build()?;
         record(
-            "line_select_lines_zero",
+            "line_select_lines_past_end",
             native
                 .process_all(&id, "a\nb")
                 .map_err(|error| core_error(ErrorStage::Execution, error)),
@@ -375,7 +418,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     {
         let mut native = TextForgeProcessor::new();
-        let id = native.create_pipeline().select_lines(1, 100)?.build()?;
+        let id = native.create_pipeline().select_lines(100, 101)?.build()?;
         record(
             "line_select_lines_missing",
             native
@@ -385,7 +428,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     {
         let mut native = TextForgeProcessor::new();
-        let id = native.create_pipeline().select_lines(2, 1)?.build()?;
+        let id = native.create_pipeline().select_lines(1, 0)?.build()?;
         record(
             "line_select_lines_inverted",
             native
@@ -397,10 +440,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut native = TextForgeProcessor::new();
         let id = native
             .create_pipeline()
-            .delete_lines_interval(0, 1)?
+            .delete_lines_interval(2, 2)?
             .build()?;
         record(
-            "line_delete_lines_interval_zero",
+            "line_delete_lines_interval_past_end",
             native
                 .process_all(&id, "a\nb")
                 .map_err(|error| core_error(ErrorStage::Execution, error)),
@@ -410,7 +453,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut native = TextForgeProcessor::new();
         let id = native
             .create_pipeline()
-            .delete_lines_interval(1, 100)?
+            .delete_lines_interval(100, 101)?
             .build()?;
         record(
             "line_delete_lines_interval_missing",
@@ -423,7 +466,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut native = TextForgeProcessor::new();
         let id = native
             .create_pipeline()
-            .delete_lines_interval(2, 1)?
+            .delete_lines_interval(1, 0)?
             .build()?;
         record(
             "line_delete_lines_interval_inverted",

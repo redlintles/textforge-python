@@ -9,6 +9,7 @@ use textforge::{
         params::TextForgeParamTypes,
         resolve_var::{TokenWrapper, ValType},
     },
+    tokens::InstructionMethods,
     utils::errors::TextForgeError,
 };
 
@@ -73,7 +74,7 @@ fn main() {
         "delete_line",
         (|| {
             let mut processor = TextForgeProcessor::new();
-            let id = processor.create_pipeline().delete_line(1_usize)?.build()?;
+            let id = processor.create_pipeline().delete_line(0_usize)?.build()?;
             processor.process_all(&id, "a\nb")
         })(),
     );
@@ -83,7 +84,7 @@ fn main() {
             let mut processor = TextForgeProcessor::new();
             let id = processor
                 .create_pipeline()
-                .delete_lines_after(1_usize)?
+                .delete_lines_after(0_usize)?
                 .build()?;
             processor.process_all(&id, "a\nb")
         })(),
@@ -94,7 +95,7 @@ fn main() {
             let mut processor = TextForgeProcessor::new();
             let id = processor
                 .create_pipeline()
-                .delete_lines_before(2_usize)?
+                .delete_lines_before(1_usize)?
                 .build()?;
             processor.process_all(&id, "a\nb")
         })(),
@@ -105,7 +106,7 @@ fn main() {
             let mut processor = TextForgeProcessor::new();
             let id = processor
                 .create_pipeline()
-                .select_lines(2_usize, 2_usize)?
+                .select_lines(1_usize, 1_usize)?
                 .build()?;
             processor.process_all(&id, "a\nb\nc")
         })(),
@@ -116,7 +117,7 @@ fn main() {
             let mut processor = TextForgeProcessor::new();
             let id = processor
                 .create_pipeline()
-                .delete_lines_interval(2_usize, 2_usize)?
+                .delete_lines_interval(1_usize, 1_usize)?
                 .build()?;
             processor.process_all(&id, "a\nb\nc")
         })(),
@@ -127,7 +128,7 @@ fn main() {
             let mut processor = TextForgeProcessor::new();
             let id = processor
                 .create_pipeline()
-                .insert_line(2_usize, "x")?
+                .insert_line(1_usize, "x")?
                 .build()?;
             processor.process_all(&id, "a\nb")
         })(),
@@ -146,7 +147,7 @@ fn main() {
             let mut processor = TextForgeProcessor::new();
             let id = processor
                 .create_pipeline()
-                .replace_line(2_usize, "x")?
+                .replace_line(1_usize, "x")?
                 .build()?;
             processor.process_all(&id, "a\nb")
         })(),
@@ -585,7 +586,7 @@ fn main() {
             let mut processor = TextForgeProcessor::new();
             let id = processor
                 .create_pipeline()
-                .insert(1_usize, " laranja")?
+                .insert(1_usize, " orange")?
                 .build()?;
             processor.process_all(&id, "banana")
         })(),
@@ -598,7 +599,7 @@ fn main() {
                 .create_pipeline()
                 .to_lowercase_word(1_usize)?
                 .build()?;
-            processor.process_all(&id, "BANANA LARANJA CHEIA DE CANJA")
+            processor.process_all(&id, "BANANA ORANGE FULL OF JAM")
         })(),
     );
     record(
@@ -609,7 +610,7 @@ fn main() {
                 .create_pipeline()
                 .to_uppercase_word(1_usize)?
                 .build()?;
-            processor.process_all(&id, "banana laranja cheia de canja")
+            processor.process_all(&id, "banana orange full of jam")
         })(),
     );
     record(
@@ -617,7 +618,7 @@ fn main() {
         (|| {
             let mut processor = TextForgeProcessor::new();
             let id = processor.create_pipeline().join_to_kebab_case()?.build()?;
-            processor.process_all(&id, "banana laranja cheia de canja")
+            processor.process_all(&id, "banana orange full of jam")
         })(),
     );
     record(
@@ -625,7 +626,7 @@ fn main() {
         (|| {
             let mut processor = TextForgeProcessor::new();
             let id = processor.create_pipeline().join_to_snake_case()?.build()?;
-            processor.process_all(&id, "banana laranja cheia de canja")
+            processor.process_all(&id, "banana orange full of jam")
         })(),
     );
     record(
@@ -633,7 +634,7 @@ fn main() {
         (|| {
             let mut processor = TextForgeProcessor::new();
             let id = processor.create_pipeline().join_to_camel_case()?.build()?;
-            processor.process_all(&id, "banana laranja cheia de canja")
+            processor.process_all(&id, "banana orange full of jam")
         })(),
     );
     record(
@@ -641,7 +642,7 @@ fn main() {
         (|| {
             let mut processor = TextForgeProcessor::new();
             let id = processor.create_pipeline().join_to_pascal_case()?.build()?;
-            processor.process_all(&id, "banana laranja cheia de canja")
+            processor.process_all(&id, "banana orange full of jam")
         })(),
     );
     record(
@@ -671,7 +672,7 @@ fn main() {
         (|| {
             let mut processor = TextForgeProcessor::new();
             let id = processor.create_pipeline().remove_whitespace()?.build()?;
-            processor.process_all(&id, "banana laranja cheia de canja")
+            processor.process_all(&id, "banana orange full of jam")
         })(),
     );
     record(
@@ -821,6 +822,122 @@ fn main() {
                 })?
                 .build()?;
             processor.process_all(&id, "x")
+        })(),
+    );
+    record(
+        "on_line",
+        (|| {
+            let mut processor = TextForgeProcessor::new();
+            let id = processor
+                .create_pipeline()
+                .on_line(
+                    1_usize,
+                    Box::new(textforge::tokens::transforms::tbs::Tbs::default())
+                        as Box<dyn InstructionMethods>,
+                )?
+                .build()?;
+            processor.process_all(&id, "  a  \n  b  \n")
+        })(),
+    );
+    record(
+        "on_line_out_of_range",
+        (|| {
+            let mut processor = TextForgeProcessor::new();
+            let id = processor
+                .create_pipeline()
+                .on_line(
+                    5_usize,
+                    Box::new(textforge::tokens::transforms::tbs::Tbs::default())
+                        as Box<dyn InstructionMethods>,
+                )?
+                .build()?;
+            processor.process_all(&id, "a\nb")
+        })(),
+    );
+    record(
+        "on_chunk",
+        (|| {
+            let mut processor = TextForgeProcessor::new();
+            let id = processor
+                .create_pipeline()
+                .on_chunk(
+                    1_usize,
+                    3_usize,
+                    Box::new(textforge::tokens::transforms::dlf::Dlf::default())
+                        as Box<dyn InstructionMethods>,
+                )?
+                .build()?;
+            processor.process_all(&id, "abcde")
+        })(),
+    );
+    record(
+        "on_chunk_clamped",
+        (|| {
+            let mut processor = TextForgeProcessor::new();
+            let id = processor
+                .create_pipeline()
+                .on_chunk(
+                    2_usize,
+                    99_usize,
+                    Box::new(textforge::tokens::transforms::tua::Tua::default())
+                        as Box<dyn InstructionMethods>,
+                )?
+                .build()?;
+            processor.process_all(&id, "abcde")
+        })(),
+    );
+    record(
+        "on_line_interval",
+        (|| {
+            let mut processor = TextForgeProcessor::new();
+            let id = processor
+                .create_pipeline()
+                .on_line_interval(
+                    0_usize,
+                    2_usize,
+                    Box::new(textforge::tokens::transforms::uniqln::Uniqln::default())
+                        as Box<dyn InstructionMethods>,
+                )?
+                .build()?;
+            processor.process_all(&id, "b\nb\na\nc")
+        })(),
+    );
+    record(
+        "try_ignore",
+        (|| {
+            let mut processor = TextForgeProcessor::new();
+            let id = processor
+                .create_pipeline()
+                .try_ignore(Box::new(textforge::tokens::transforms::dls::Dls::new(9))
+                    as Box<dyn InstructionMethods>)?
+                .add_to_end("!")?
+                .build()?;
+            processor.process_all(&id, "abc")
+        })(),
+    );
+    record(
+        "try_ignore_success",
+        (|| {
+            let mut processor = TextForgeProcessor::new();
+            let id = processor
+                .create_pipeline()
+                .try_ignore(Box::new(textforge::tokens::transforms::rev::Rev::default())
+                    as Box<dyn InstructionMethods>)?
+                .build()?;
+            processor.process_all(&id, "abc")
+        })(),
+    );
+    record(
+        "try_ignore_unicode",
+        (|| {
+            let mut processor = TextForgeProcessor::new();
+            let id = processor
+                .create_pipeline()
+                .try_ignore(Box::new(textforge::tokens::transforms::dls::Dls::new(1))
+                    as Box<dyn InstructionMethods>)?
+                .repeat(2_usize)?
+                .build()?;
+            processor.process_all(&id, "é")
         })(),
     );
     record(

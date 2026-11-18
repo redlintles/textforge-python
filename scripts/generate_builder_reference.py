@@ -19,6 +19,71 @@ FIXTURE = ROOT / "tests/fixtures/builder_reference.json"
 EXAMPLE = ROOT / "examples/builder_reference.rs"
 
 
+# Builders whose last argument is one instruction (Rust ``Into<TokenWrapper>``).
+NESTED = {"on_line", "on_chunk", "on_line_interval", "try_ignore"}
+# Builders that read or write files; tests/test_core_040.py covers them with real files.
+FILE_INSTRUCTIONS = {
+    "pipeline_join",
+    "write_to_file",
+    "append_file",
+    "prepend_file",
+    "insert_file",
+}
+# Nested instructions the Rust oracle can construct: method -> (module, struct, constructor).
+TOKENS = {
+    "trim_both_sides": ("tbs", "Tbs", "default()"),
+    "delete_first": ("dlf", "Dlf", "default()"),
+    "to_reverse": ("rev", "Rev", "default()"),
+    "unique_lines": ("uniqln", "Uniqln", "default()"),
+    "to_uppercase_all": ("tua", "Tua", "default()"),
+}
+NESTED_CASES: list[dict[str, Any]] = [
+    {
+        "name": "on_line",
+        "input": "  a  \n  b  \n",
+        "steps": [["on_line", [1, {"token": ["trim_both_sides", []]}]]],
+    },
+    {
+        "name": "on_line_out_of_range",
+        "input": "a\nb",
+        "steps": [["on_line", [5, {"token": ["trim_both_sides", []]}]]],
+    },
+    {
+        "name": "on_chunk",
+        "input": "abcde",
+        "steps": [["on_chunk", [1, 3, {"token": ["delete_first", []]}]]],
+    },
+    {
+        "name": "on_chunk_clamped",
+        "input": "abcde",
+        "steps": [["on_chunk", [2, 99, {"token": ["to_uppercase_all", []]}]]],
+    },
+    {
+        "name": "on_line_interval",
+        "input": "b\nb\na\nc",
+        "steps": [["on_line_interval", [0, 2, {"token": ["unique_lines", []]}]]],
+    },
+    {
+        "name": "try_ignore",
+        "input": "abc",
+        "steps": [
+            ["try_ignore", [{"token": ["delete_single", [9]]}]],
+            ["add_to_end", ["!"]],
+        ],
+    },
+    {
+        "name": "try_ignore_success",
+        "input": "abc",
+        "steps": [["try_ignore", [{"token": ["to_reverse", []]}]]],
+    },
+    {
+        "name": "try_ignore_unicode",
+        "input": "é",
+        "steps": [["try_ignore", [{"token": ["delete_single", [1]]}]], ["repeat", [2]]],
+    },
+]
+
+
 def cases() -> list[dict[str, Any]]:
     """Read simple public-builder doctests and supply explicit logical cases."""
     api = (ROOT / "vendor/textforge/src/api/mod.rs").read_text(encoding="utf-8")
@@ -40,6 +105,8 @@ def cases() -> list[dict[str, Any]]:
             result.append({"name": name, "input": input_text, "steps": steps})
             continue
         if name in {"val", "var", "mut_var", "eval", "iter", "end", "remove_pattern"}:
+            continue
+        if name in NESTED or name in FILE_INSTRUCTIONS:
             continue
         docs_match = re.search(r"((?:    ///[^\n]*\n|[ \t]*\n)*)$", trait[: match.start()])
         docs = re.sub(r"(?m)^    /// ?", "", docs_match[0]) if docs_match else ""
@@ -114,6 +181,7 @@ def cases() -> list[dict[str, Any]]:
             },
         ]
     )
+    result.extend(NESTED_CASES)
     result.append(
         {
             "name": "define_replace_map",
@@ -148,6 +216,20 @@ def rust_argument(value: object) -> str:
         )
     if "body" in value:
         return "|body| { " + rust_chain(value["body"], "body") + "; Ok(()) }"
+    if "token" in value:
+        method, arguments = value["token"]
+        if method == "delete_single":
+            (index,) = arguments
+            return f"Box::new(textforge::tokens::transforms::dls::Dls::new({index}))" + (
+                " as Box<dyn InstructionMethods>"
+            )
+        if method not in TOKENS or arguments:
+            raise ValueError("Unsupported nested Rust fixture; extend TOKENS")
+        module, struct, constructor = TOKENS[method]
+        return (
+            f"Box::new(textforge::tokens::transforms::{module}::{struct}::{constructor})"
+            " as Box<dyn InstructionMethods>"
+        )
     if "instruction" in value:
         if value["instruction"] != ["add_to_beginning", ["🍌"]]:
             raise ValueError("Unsupported nested Rust fixture; extend its explicit template")
@@ -173,6 +255,7 @@ use textforge::{
     api::{get_var, processor::{TextForgeProcessor, TextForgeProcessorMethods},
         TextForgeBuilderMethods, TextForgeBlockMethods, TextForgeConditionalMethods},
     parser::{params::TextForgeParamTypes, resolve_var::{TokenWrapper, ValType}},
+    tokens::InstructionMethods,
     utils::errors::TextForgeError,
 };
 

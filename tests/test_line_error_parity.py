@@ -21,13 +21,25 @@ CASES: list[tuple[str, list[str | int], str]] = [
     ("keep_lines_matching", ["["], "regex"),
     ("delete_lines_matching", ["["], "regex"),
 ]
+# Line numbers start at 0 (TextForge 0.3.2): "a\nb" has lines 0 and 1, and an
+# interval end past the last line is clamped, so only its start can be missing.
 for method in ("delete_line", "delete_lines_after", "delete_lines_before"):
-    CASES.extend([(method, [0], "zero"), (method, [100], "missing")])
-for method in ("insert_line", "replace_line"):
-    CASES.extend([(method, [0, "x"], "zero"), (method, [100, "x"], "missing")])
+    CASES.extend([(method, [2], "past_end"), (method, [100], "missing")])
+CASES.extend(
+    [
+        ("insert_line", [3, "x"], "past_end"),
+        ("insert_line", [100, "x"], "missing"),
+        ("replace_line", [2, "x"], "past_end"),
+        ("replace_line", [100, "x"], "missing"),
+    ]
+)
 for method in ("select_lines", "delete_lines_interval"):
     CASES.extend(
-        [(method, [0, 1], "zero"), (method, [1, 100], "missing"), (method, [2, 1], "inverted")]
+        [
+            (method, [2, 2], "past_end"),
+            (method, [100, 101], "missing"),
+            (method, [1, 0], "inverted"),
+        ]
     )
 
 
