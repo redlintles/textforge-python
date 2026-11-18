@@ -40,6 +40,12 @@ def main() -> None:
         command = ["cargo", "test", "--manifest-path", manifest, "--locked"]
         if features:
             command.extend(["--features", features])
+        if features == "test_access":
+            # test_access enables the core's wall-clock benchmarks (tests/benchmark.rs,
+            # limits of a few milliseconds per run). They hold in optimized builds, as
+            # in the core's own CI (`cargo test --features test_access,bytecode
+            # --release`), but not in debug builds on shared CI runners.
+            command.append("--release")
         run(*command)
 
 

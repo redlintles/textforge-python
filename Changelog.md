@@ -64,6 +64,10 @@ the engine underneath, so the upgrade notes below come first.
   the portable processor surface from the core sources.
 - Direct Rust dependencies follow the core: `rand`/`random-string` removed,
   `uuid` 1.29.3, `html-escape` 0.3.1.
+- `scripts/check.py` runs the embedded core's `test_access` suite with
+  `--release`, as the core's own CI does: its wall-clock benchmarks (a few
+  milliseconds per run, now including file instructions that sync to disk)
+  failed the `quality` job in debug builds on GitHub runners.
 
 ### Documentation
 

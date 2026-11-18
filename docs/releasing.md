@@ -62,6 +62,9 @@ Rust 1.97 and CPython 3.12:
   `test-reference`), native Rust tests, Ruff, mypy, generated-source checks, the
   three regenerated Rust oracles and the embedded-core checklist (default,
   `bytecode`, `watchers` and `test_access` tests; Clippy default and `test_access`).
+  The `test_access` tests run with `--release`, because their wall-clock
+  benchmarks are only meaningful in optimized builds (the first 0.2.0 CI run
+  failed them in a debug build).
 - **89 builder** and **41 processor** reference cases were regenerated from the
   real 0.4.0 engine and reproduce on re-execution. Changed values follow the
   core's behavior changes (0-based lines, rewritten messages, error details).
