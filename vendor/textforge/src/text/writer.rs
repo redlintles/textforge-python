@@ -2,7 +2,7 @@ use std::{fs::OpenOptions, io::Write, path::Path};
 
 use crate::{
     parser::resolve_var::TokenWrapper,
-    utils::{errors::TextForgeError, validations::check_file_path},
+    utils::{errors::TextForgeError, validations::check_output_file_path},
 };
 
 pub fn write_to_file(path: &Path, tokens: &[TokenWrapper]) -> Result<(), TextForgeError> {
@@ -10,7 +10,7 @@ pub fn write_to_file(path: &Path, tokens: &[TokenWrapper]) -> Result<(), TextFor
         .iter()
         .map(TokenWrapper::to_text_line_unresolved)
         .collect::<Result<Vec<_>, _>>()?;
-    check_file_path(path, Some("textforge"))?;
+    check_output_file_path(path, Some("textforge"))?;
     let mut file = OpenOptions::new()
         .create(true)
         .write(true)
@@ -19,7 +19,7 @@ pub fn write_to_file(path: &Path, tokens: &[TokenWrapper]) -> Result<(), TextFor
         .map_err(|_| {
             TextForgeError::new(
                 crate::utils::errors::TextForgeErrorCode::FileOpeningError(
-                    "Failed opening File".into(),
+                    "cannot create the pipeline file".into(),
                 ),
                 "",
                 format!("{:?}", path),
@@ -41,7 +41,7 @@ pub fn write_to_file(path: &Path, tokens: &[TokenWrapper]) -> Result<(), TextFor
         true => Ok(()),
         false => Err(TextForgeError::new(
             crate::utils::errors::TextForgeErrorCode::FileWritingError(
-                "Failed writing text to textforge file".into(),
+                "cannot write the pipeline file".into(),
             ),
             "",
             "",

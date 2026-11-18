@@ -112,7 +112,7 @@ mod tests {
     fn set_params_rejects_wrong_param_types() {
         let mut t = Raw::default();
 
-        // primeiro deveria ser String(pattern)
+        // the first should be String(pattern)
         let params = vec![
             TextForgeParamTypes::Usize(7),
             TextForgeParamTypes::String("b".to_string()),
@@ -121,7 +121,9 @@ mod tests {
         let got = t.set_params(&params);
 
         let expected = Err(crate::utils::errors::TextForgeError::new(
-            TextForgeErrorCode::InvalidParameters("Pattern should be of string type".into()),
+            TextForgeErrorCode::InvalidParameters(
+                "parameter 1 (`pattern`) must be text, but it is a number".into(),
+            ),
             "",
             "",
         ));
@@ -141,8 +143,8 @@ mod tests {
         let got = t.set_params(&params);
 
         let expected = Err(crate::utils::errors::TextForgeError::new(
-            TextForgeErrorCode::TextParsingError("Failed to create regex".into()),
-            "sslt",
+            TextForgeErrorCode::TextParsingError("`(` is not a valid regular expression".into()),
+            "raw",
             "(".to_string(),
         ));
 
@@ -150,7 +152,7 @@ mod tests {
     }
 
     // ============================
-    // Bytecode-only tests (separados)
+    // Bytecode-only tests
     // ============================
     #[cfg(feature = "bytecode")]
     mod bytecode_tests {

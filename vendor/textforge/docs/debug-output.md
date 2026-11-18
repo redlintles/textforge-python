@@ -1,0 +1,95 @@
+# Debug output
+
+`txf --debug` (`-d`) prints this trace on stdout instead of the result; the
+last step's `After:` is the final text. With `--output`, the result is still
+written to the file. Up to 0.3.1 the result was printed again after the trace.
+
+`process_all_with_debug` prints every top-level step (`Step: [i] => [i+1]`,
+the instruction, the text before and after). When a step runs other
+instructions inside it, a nested trace follows the step:
+
+```text
+▶ cblk cleanup  (3 instructions)
+  │ 1. tbs  16 → 14 chars
+  │ 2. raw       14 → 12 chars
+  │ 3. atb #   12 → 14 chars
+◀ cleanup  16 → 14 chars (−2) · 2 → 2 lines
+
+▶ rmape animals  (2 rules)
+  │ rule 1 /cat/  'cat' → 'wolf'  @ 2..5
+  │ rule 2 /wolf/  'wolf' → 'dog'  @ 7..11
+◀ animals  14 → 14 chars (±0) · 2 → 2 lines · 2 replacements
+
+▶ iter 2 times
+  │ 1. ate 0  14 → 15 chars
+  │ 2. ate 1  15 → 16 chars
+◀ iter  14 → 16 chars (+2) · 2 → 2 lines
+
+▶ onln 0  (line: 12 chars)
+  │ 1. tua  12 → 12 chars
+◀ onln  16 → 16 chars (±0) · 2 → 2 lines
+```
+
+- `▶` opens a container (`cblk`, `iter`, `onln`, `onck`, `onlni`, `ppjn`, `rmape`) and
+  `◀` closes it with its **net effect** on the text it received: characters
+  (Unicode scalars) and logical lines before → after.
+- `│ n.` is one nested step with the instruction as executed (variables and
+  `[[ ]]` already resolved, e.g. `ate 0` for `ate '[[__COUNTER__]]'`) and the
+  character count before → after. Nested containers open their own indented
+  block instead of a step line.
+- At most 20 nested steps are listed per container, followed by
+  `… +K steps`. Steps and containers past the limit are executed normally but
+  are neither rendered nor measured, so debugging a large loop costs about as
+  much as running it.
+- For `on*`, the header shows the size of the section; step counts describe the
+  section, and the closing line describes the whole document.
+- `rmape` lists each replacement with its rule (index, regex), the original and
+  the new text, and the character range of the original match. At most 20
+  replacements are listed per call, followed by `… +K replacements`. Snippets
+  longer than 40 characters are shortened and control characters are escaped.
+  The list comes from the single non-cascading pass that produced the result;
+  nothing is applied again to describe it.
+
+Guarantees:
+
+- Debug output never changes the result: the trace only reads the documents.
+  Tests compare debug and non-debug results for the same pipelines.
+- The same trace is produced with and without the `buffered` feature. With
+  `buffered`, it is written to the spooled log like the rest of the debug output,
+  so no whole-log `String` exists.
+- Outside debug runs the trace is disabled; each hook is one `Option` check.
+- Colors use `colored`, like the rest of the debug output, and follow its
+  enable/disable rules.
+
+`process_single_with_debug` prints the same nested trace after its single step.
+The instruction text in step lines uses each instruction's display form
+(`to_textforge_line`), the same text shown in `Instruction:`; it is not quoted
+for re-parsing.
+
+## Errors ignored by `tryi`
+
+When `tryi` ignores an error, the trace shows it where it happened, as the
+warning version of the error's report (kind, trace, parameters, input), and
+names the variables the snapshot put back:
+
+```text
+warning[12] IndexOutOfRange (ignored by tryi): character index 9 is out of range: the text has 2 characters (valid indices 0 to 1)
+  --> dls 9;
+
+  Trace (outermost first):
+      p.textforge:4  cblk calc;  · block `calc`, step 2 of 2
+    → p.textforge:3  dls 9;  ← failed here
+  …
+  state restored: variables total
+```
+
+Containers the failed instruction had opened are closed there. After the last
+step, the trace lists every ignored error (at most 50, then a count):
+
+```text
+1 error ignored by tryi:
+  warning[12] IndexOutOfRange at p.textforge:3: dls 9; — character index 9 is out of range: …
+```
+
+The result is the same with and without debug. See
+[error handling](error-handling.md).

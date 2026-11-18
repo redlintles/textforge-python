@@ -14,6 +14,8 @@ facade. Existing fluent Rust contracts are unchanged.
 | `create_pipeline` | `create_pipeline` returns an independent `PipelinePlan`; `register(&plan)` validates and registers it |
 | `add_transform` | `add_transform(Vec<InstructionSpec>)`, atomically validated |
 | `remove_transform`, `transform_exists`, `show_transforms` | Same names; `list_transforms` additionally returns owned IDs |
+| `set_pipeline_name`, `pipeline_name` | Same names; `pipeline_name` returns an owned string |
+| `with_profile`, `set_profile`, `profile` | `set_profile` and `profile` with the same plain `ExecutionProfile` value (`with_profile` is the consuming form of `set_profile`) |
 | `get_transform_vec` | Same name, returns independent editable `InstructionSpec` snapshots |
 | `get_text_transform_vec` | Same name, delegates the core text representation |
 | cloning through `get_transform_vec` + `add_transform` | `clone_pipeline`, or snapshot/edit/register |
@@ -194,7 +196,7 @@ same description. See [normalization semantics](unicode-normalization.md).
 
 All sixteen line tokens use the existing `InstructionSpec`/`Argument` registry
 path; there is no second line engine in the portable facade. Numeric arguments
-are one-based line numbers. The fluent Rust method and canonical token mapping
+are zero-based line numbers. The fluent Rust method and canonical token mapping
 are listed in [the line guide](lines.md). `tests/lines.rs` checks each fluent
 method against portable descriptions, runtime variables, block and conditional
 bodies, textual parsing and persistence, big-endian bytecode, spilled buffers and
@@ -204,3 +206,42 @@ Adapters must preserve numeric conversions and portable errors. The Python
 binding provides explicit typed methods matching the Rust names and delegates
 through this portable representation. No line-specific domain validation belongs
 in an adapter.
+
+## File instructions
+
+Rust `pipeline_join(path)`, `write_to_file(path)`, `append_file(path)`,
+`prepend_file(path)` and `insert_file(index, path)` map to `InstructionSpec`
+mnemonics `ppjn`, `wtf`, `apf`, `ppf` and `inf`, with
+`Argument::Text` paths and an `Argument::Number` (or `Variable`) index. No new
+portable type or method is needed: the joined pipeline `ppjn` carries is
+implied by the instruction, so descriptions and snapshots hold only the path,
+and `register` loads it (a missing file is a persistence error). `tests/file_instructions.rs` checks portable
+plans against the builder and the text form. See [file instructions](file-instructions.md).
+
+## Section instructions (0.3.0)
+
+Rust `on_line(n, inner)`, `on_chunk(start, end, inner)` and
+`on_line_interval(start, end, inner)` map to `InstructionSpec` mnemonics `onln`,
+`onck` and `onlni`. Numeric arguments are `Number` or `Variable`; the nested
+instruction is `Argument::Instruction`, the same mechanism `iter` and `ifdc`
+use. No new portable type or method is needed. `tests/on_instructions.rs`
+checks portable plans against the fluent builder. Bindings are not updated yet;
+that requires maintainer approval. See [section instructions](on-instructions.md).
+
+## Ignoring errors and error details (0.4.0)
+
+Rust `try_ignore(inner)` maps to the `InstructionSpec` mnemonic `tryi` with one
+`Argument::Instruction`, the mechanism `iter` and `ifdc` use; no new portable
+method is needed. `PortableProcessor::process_all_with_debug` shows the errors
+`tryi` ignored, as the Rust method does.
+
+`BindingError::details` (`BindingErrorDetails`) carries what `TextForgeError`
+gained: `kind` (the code's name),
+`trace` (outermost first), `parameters` (name, value, as written), `cause`,
+`hint`, `ignorable` and `report` (the uncolored report `txf` prints). They are
+owned data, filled by `BindingError::from_core`; adapters expose them as
+fields of the target language's error. The safety limits have their own code,
+31 (`LimitExceededError`), which was 20 (`ValidationError`) before 0.4.0.
+`tests/portable.rs` checks a `tryi` plan against the builder and the details
+of an execution error. Bindings are not updated yet; that requires maintainer
+approval. See [error handling](error-handling.md).

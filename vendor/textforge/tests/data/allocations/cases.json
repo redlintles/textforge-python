@@ -92,25 +92,25 @@
   {
     "name": "dln",
     "lines": [
-      "dln 2;"
+      "dln 1;"
     ]
   },
   {
     "name": "dlna",
     "lines": [
-      "dlna 2;"
+      "dlna 1;"
     ]
   },
   {
     "name": "dlnb",
     "lines": [
-      "dlnb 2;"
+      "dlnb 1;"
     ]
   },
   {
     "name": "dlni",
     "lines": [
-      "dlni 1 2;"
+      "dlni 0 1;"
     ]
   },
   {
@@ -140,7 +140,7 @@
   {
     "name": "inl",
     "lines": [
-      "inl 2 middle;"
+      "inl 1 middle;"
     ]
   },
   {
@@ -255,7 +255,7 @@
   {
     "name": "rln",
     "lines": [
-      "rln 2 middle;"
+      "rln 1 middle;"
     ]
   },
   {
@@ -310,7 +310,7 @@
   {
     "name": "slnc",
     "lines": [
-      "slnc 1 2;"
+      "slnc 0 1;"
     ]
   },
   {
@@ -493,6 +493,61 @@
     "lines": [
       "var x = value;",
       "ate \"{{x}}\";"
+    ]
+  },
+  {
+    "name": "tryi",
+    "lines": [
+      "tryi dls 9999;",
+      "tryi tua;"
+    ]
+  },
+  {
+    "name": "onln",
+    "lines": [
+      "onln 1 apply tua;"
+    ]
+  },
+  {
+    "name": "onck",
+    "lines": [
+      "onck 0 5 apply tua;"
+    ]
+  },
+  {
+    "name": "onlni",
+    "lines": [
+      "onlni 0 1 apply ate \"!\";"
+    ]
+  },
+  {
+    "name": "wtf",
+    "lines": [
+      "wtf tests/data/allocations/wtf-output.txt;"
+    ]
+  },
+  {
+    "name": "apf",
+    "lines": [
+      "apf tests/data/allocations/piece.txt;"
+    ]
+  },
+  {
+    "name": "ppf",
+    "lines": [
+      "ppf tests/data/allocations/piece.txt;"
+    ]
+  },
+  {
+    "name": "inf",
+    "lines": [
+      "inf 2 tests/data/allocations/piece.txt;"
+    ]
+  },
+  {
+    "name": "ppjn",
+    "lines": [
+      "ppjn tests/data/allocations/joined.textforge;"
     ]
   }
 ]
