@@ -35,68 +35,94 @@ supported; `add_replace_rule` is the explicit single-rule operation.
 | --- | --- |
 | `define_replace_map` | `name: str \| Variable, configure: ReplaceMapBody` (legacy three-argument form also supported) |
 | `add_replace_rule` | `name: str \| Variable, pattern: str \| Variable, replacement: str \| Variable` |
-| `execute_replace_map` | `name: str \| Variable` |
 | `add_to_beginning` | `text: str \| Variable` |
 | `add_to_end` | `text: str \| Variable` |
+| `append_file` | `path: str \| Variable` |
+| `append_line` | `text: str \| Variable` |
 | `block_assoc` | `block_name: str, f: PipelineBody` |
 | `call_block` | `block_name: str` |
-| `capitalize_chunk` | `start_index: int \| Variable, end_index: int \| Variable` |
+| `capitalize_chunk` | `start_index: int \| str \| Variable, end_index: int \| str \| Variable` |
 | `capitalize_first_word` | `` |
 | `capitalize_last_word` | `` |
-| `capitalize_range` | `start_index: int \| Variable, end_index: int \| Variable` |
-| `capitalize_single_word` | `index: int \| Variable` |
-| `delete_after` | `index: int \| Variable` |
-| `delete_before` | `index: int \| Variable` |
-| `delete_chunk` | `start_index: int \| Variable, end_index: int \| Variable` |
+| `capitalize_range` | `start_index: int \| str \| Variable, end_index: int \| str \| Variable` |
+| `capitalize_single_word` | `index: int \| str \| Variable` |
+| `delete_after` | `index: int \| str \| Variable` |
+| `delete_before` | `index: int \| str \| Variable` |
+| `delete_chunk` | `start_index: int \| str \| Variable, end_index: int \| str \| Variable` |
+| `delete_empty_lines` | `` |
 | `delete_first` | `` |
 | `delete_last` | `` |
-| `delete_single` | `index: int \| Variable` |
+| `delete_line` | `line: int \| str \| Variable` |
+| `delete_lines_after` | `line: int \| str \| Variable` |
+| `delete_lines_before` | `line: int \| str \| Variable` |
+| `delete_lines_interval` | `start_line: int \| str \| Variable, end_line: int \| str \| Variable` |
+| `delete_lines_matching` | `pattern: str \| Variable` |
+| `delete_single` | `index: int \| str \| Variable` |
 | `end` | `` |
 | `eval` | `expr: str \| Variable, var_name: str \| Variable` |
+| `execute_replace_map` | `name: str \| Variable` |
 | `extract_matches_joined` | `pattern: str \| Variable, separator: str \| Variable` |
 | `if_do_contains_each` | `value: str, f: PipelineBody` |
-| `insert` | `index: int \| Variable, text_to_insert: str \| Variable` |
-| `iter` | `times: int \| Variable, inner: Pipeline \| Instruction \| Variable` |
+| `insert` | `index: int \| str \| Variable, text_to_insert: str \| Variable` |
+| `insert_file` | `index: int \| str \| Variable, path: str \| Variable` |
+| `insert_line` | `line: int \| str \| Variable, text: str \| Variable` |
+| `iter` | `times: int \| str \| Variable, inner: Pipeline \| Instruction \| Variable` |
+| `join_lines` | `separator: str \| Variable` |
 | `join_to_camel_case` | `` |
 | `join_to_kebab_case` | `` |
 | `join_to_pascal_case` | `` |
 | `join_to_snake_case` | `` |
+| `keep_lines_matching` | `pattern: str \| Variable` |
 | `mut_var` | `var_name: str \| Variable, var_value: str \| int \| Variable` |
-| `pad_left` | `text: str \| Variable, times: int \| Variable` |
-| `pad_right` | `text: str \| Variable, times: int \| Variable` |
+| `normalize_unicode` | `mode: str \| Variable` |
+| `on_chunk` | `start_index: int \| str \| Variable, end_index: int \| str \| Variable, inner: Pipeline \| Instruction` |
+| `on_line` | `line: int \| str \| Variable, inner: Pipeline \| Instruction` |
+| `on_line_interval` | `start_line: int \| str \| Variable, end_line: int \| str \| Variable, inner: Pipeline \| Instruction` |
+| `pad_left` | `text: str \| Variable, times: int \| str \| Variable` |
+| `pad_right` | `text: str \| Variable, times: int \| str \| Variable` |
+| `pipeline_join` | `path: str \| Variable` |
+| `prepend_file` | `path: str \| Variable` |
+| `prepend_line` | `text: str \| Variable` |
+| `remove_line_breaks` | `` |
 | `remove_pattern` | `pattern: str \| Variable` |
 | `remove_whitespace` | `` |
-| `repeat` | `times: int \| Variable` |
+| `repeat` | `times: int \| str \| Variable` |
 | `replace_all_with` | `pattern: str \| Variable, text_to_replace: str \| Variable` |
-| `replace_count_with` | `pattern: str \| Variable, text_to_replace: str \| Variable, count: int \| Variable` |
+| `replace_count_with` | `pattern: str \| Variable, text_to_replace: str \| Variable, count: int \| str \| Variable` |
 | `replace_first_with` | `pattern: str \| Variable, text_to_replace: str \| Variable` |
 | `replace_last_with` | `pattern: str \| Variable, text_to_replace: str \| Variable` |
-| `replace_nth_with` | `pattern: str \| Variable, text_to_replace: str \| Variable, index: int \| Variable` |
-| `rotate_left` | `times: int \| Variable` |
-| `rotate_right` | `times: int \| Variable` |
-| `select` | `start_index: int \| Variable, end_index: int \| Variable` |
+| `replace_line` | `line: int \| str \| Variable, text: str \| Variable` |
+| `replace_nth_with` | `pattern: str \| Variable, text_to_replace: str \| Variable, index: int \| str \| Variable` |
+| `reverse_lines` | `` |
+| `rotate_left` | `times: int \| str \| Variable` |
+| `rotate_right` | `times: int \| str \| Variable` |
+| `select` | `start_index: int \| str \| Variable, end_index: int \| str \| Variable` |
+| `select_lines` | `start_line: int \| str \| Variable, end_line: int \| str \| Variable` |
 | `split_characters` | `` |
-| `split_select` | `pattern: str \| Variable, index: int \| Variable` |
+| `split_select` | `pattern: str \| Variable, index: int \| str \| Variable` |
 | `to_html_escaped` | `` |
 | `to_html_unescaped` | `` |
 | `to_json_escaped` | `` |
 | `to_json_unescaped` | `` |
 | `to_lowercase_all` | `` |
-| `to_lowercase_chunk` | `start_index: int \| Variable, end_index: int \| Variable` |
-| `to_lowercase_single` | `index: int \| Variable` |
-| `to_lowercase_word` | `index: int \| Variable` |
+| `to_lowercase_chunk` | `start_index: int \| str \| Variable, end_index: int \| str \| Variable` |
+| `to_lowercase_single` | `index: int \| str \| Variable` |
+| `to_lowercase_word` | `index: int \| str \| Variable` |
 | `to_reverse` | `` |
 | `to_uppercase_all` | `` |
-| `to_uppercase_chunk` | `start_index: int \| Variable, end_index: int \| Variable` |
-| `to_uppercase_single` | `index: int \| Variable` |
-| `to_uppercase_word` | `index: int \| Variable` |
+| `to_uppercase_chunk` | `start_index: int \| str \| Variable, end_index: int \| str \| Variable` |
+| `to_uppercase_single` | `index: int \| str \| Variable` |
+| `to_uppercase_word` | `index: int \| str \| Variable` |
 | `to_url_decoded` | `` |
 | `to_url_encoded` | `` |
 | `trim_both_sides` | `` |
 | `trim_left_side` | `` |
 | `trim_right_side` | `` |
+| `try_ignore` | `inner: Pipeline \| Instruction` |
+| `unique_lines` | `` |
 | `val` | `var_name: str \| Variable, var_value: str \| int \| Variable` |
 | `var` | `var_name: str \| Variable, var_value: str \| int \| Variable` |
+| `write_to_file` | `path: str \| Variable` |
 
 ## Groups and nested instructions
 
@@ -122,22 +148,37 @@ assert plan.compile()("x") == ""  # The condition is rechecked before each child
 
 `iter` repeats a single instruction, preserving Rust semantics; it does not accept
 multi-step or grouped bodies. Nest an operation as a one-instruction Pipeline or
-pass an Instruction snapshot. `end` remains available for explicit low-level
+pass an Instruction snapshot. `try_ignore`, `on_line`, `on_chunk` and
+`on_line_interval` take one instruction the same way (a one-instruction Pipeline
+or an Instruction, but not a Variable, as Rust's `Into<TokenWrapper>`).
+
+```python
+from textforge import Instruction, Pipeline
+
+assert Pipeline().try_ignore(Pipeline().delete_single(9)).compile()("abc") == "abc"
+assert Pipeline().on_chunk(1, 2, Instruction("tua")).compile()("abcd") == "aBCd"
+```
+
+`end` remains available for explicit low-level
 construction; group helpers emit their own structural boundaries.
 
 ## Values and validation
 
 - Text parameters accept strings or explicit variable references. String
   interpolation and regex semantics remain those of the Rust engine.
-- Counts and indices accept nonnegative integers or references. Booleans and
-  floats are rejected; literal integers must fit u64 and the target's native size.
+- Counts and indices accept nonnegative integers, references, or text holding a
+  `[[ ]]` expression or `{{ }}` template that must give a non-negative integer
+  when the instruction runs. Booleans and floats are rejected; literal integers
+  must fit u64 and the target's native size. Text that is neither is rejected
+  when the plan is compiled.
 - val/var/mut_var convert literal integers to text, as the Rust builder does;
   references remain references. Use eval for expression results.
 - Python type and range errors are immediate. Structural policies are validated
   atomically by compile/register. Variable existence and input-dependent errors
   remain execution-time errors.
-- Indices and ranges retain Rust semantics. For example, insert places text after
-  the indexed character. Parameter names are preserved for keyword arguments.
+- Indices and ranges retain Rust semantics: all of them, line numbers included,
+  start at 0. `insert(0, text)` inserts at the start; any other index inserts
+  after that character. Parameter names are preserved for keyword arguments.
 
 Existing add(mnemonic, *arguments), Instruction, block and contains_each remain
 available for lower-level integrations; ordinary construction uses named methods.
@@ -150,7 +191,7 @@ does not install methods dynamically. Generation reads the public Rust signature
 and registry parameter kinds. CI checks the committed output with --check.
 
 Run `python scripts/generate_builder_reference.py` to refresh the separate Rust
-reference executable and expected outputs after a reviewed core update. Its 61
+reference executable and expected outputs after a reviewed core update. Its 89
 cases invoke the real Rust builder, using its documented examples plus logical
 operations. --check re-executes it without changing the saved outputs. The special
 test-reference Cargo feature is used only for this test oracle, never for wheels.

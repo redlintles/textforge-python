@@ -1,19 +1,19 @@
 # Release procedure
 
-The prepared binding version is **0.1.3**; the vendored engine is TextForge 0.2.0 at the exact optimized revision in `vendor/CORE_REVISION`. This checkout
+The prepared binding version is **0.2.0**; the vendored engine is TextForge 0.4.0 at the exact release revision in `vendor/CORE_REVISION`. This checkout
 does not publish itself. The maintainer reviews CI, pushes/tags the approved
 commit and initiates publication. See [Changelog.md](../Changelog.md) and the
 [dependency snapshot](dependencies.md).
 
-1. Start from the reviewed binding commit and a clean worktree. Confirm 0.1.3 in
+1. Start from the reviewed binding commit and a clean worktree. Confirm 0.2.0 in
    Cargo.toml, the textforgers Cargo.lock entry and the compatibility document.
    Python version metadata is derived from Cargo.toml, not duplicated in Python.
 2. Activate a clean environment, install pip 26.2.2, then `python -m pip install
    --group dev`. Use a new empty artifact directory. Build with
-   `maturin build --release --locked --sdist --out dist/0.1.3`, install exactly
-   textforgers==0.1.3 from that directory, and run `python scripts/check.py`.
-3. Run `python scripts/check_distribution.py --wheel-dir dist/0.1.3 --types` and
-   `python -m twine check dist/0.1.3/*`. The validator rejects wheels whose metadata
+   `maturin build --release --locked --sdist --out dist/0.2.0`, install exactly
+   textforgers==0.2.0 from that directory, and run `python scripts/check.py`.
+3. Run `python scripts/check_distribution.py --wheel-dir dist/0.2.0 --types` and
+   `python -m twine check dist/0.2.0/*`. The validator rejects wheels whose metadata
    disagrees with the source version, and checks installed resources/capabilities.
    Do not mix older candidate artifacts into this directory.
 4. Unpack the sdist outside both repositories, rebuild with `--release --locked`,
@@ -30,7 +30,7 @@ commit and initiates publication. See [Changelog.md](../Changelog.md) and the
    pypi/testpypi. Configure required maintainer reviewers on both environments.
    Merely naming an environment in YAML does not enforce manual approval.
 7. After approval, push the reviewed commit yourself. Dispatch CI with destination
-   testpypi, then install textforgers==0.1.3 from TestPyPI in a clean environment
+   testpypi, then install textforgers==0.2.0 from TestPyPI in a clean environment
    and verify it. Use the distribution name textforgers; do not install another
    distribution that provides the same textforge import.
 8. Review the successful candidate jobs and artifacts, then manually dispatch the
@@ -51,6 +51,28 @@ Official references:
 - [PyO3 0.30.1](https://pyo3.rs/v0.30.1/).
 - [Trusted publisher setup](https://docs.pypi.org/trusted-publishers/adding-a-publisher/).
 - [macOS 14 runner retirement](https://github.blog/changelog/2026-10-01-github-actions-macos-14-runner-image-retirement/).
+
+## Local validation for 0.2.0 (2026-11-18)
+
+The prepared source pins core 0.4.0 release revision
+`6407329777e5d3c3875e8695ebc2b683f4d4f9e1`. Checks ran on Linux x86_64 with
+Rust 1.97 and CPython 3.12:
+
+- `scripts/check.py` passed: Rust formatting, strict Clippy (with and without
+  `test-reference`), native Rust tests, Ruff, mypy, generated-source checks, the
+  three regenerated Rust oracles and the embedded-core checklist (default,
+  `bytecode`, `watchers` and `test_access` tests; Clippy default and `test_access`).
+- **89 builder** and **41 processor** reference cases were regenerated from the
+  real 0.4.0 engine and reproduce on re-execution. Changed values follow the
+  core's behavior changes (0-based lines, rewritten messages, error details).
+- **261 Rust source files** are integrity-checked.
+- A local release wheel (`maturin build --release --locked`) passed
+  `check_distribution.py --types` and **286 Python tests**, with the Windows-only
+  native-wide-path test skipped.
+
+Still required before publication: the remote CI matrix (Windows, macOS, CPython
+3.10–3.14, Rust 1.89), the sdist rebuilt and tested outside the checkout, and
+`twine check` of the final artifacts.
 
 ## Local validation for 0.1.3 (2026-11-01)
 

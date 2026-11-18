@@ -2,8 +2,8 @@
 
 | Component | Supported/configured contract | Verification |
 | --- | --- | --- |
-| Binding | Cargo/Python distribution 0.1.3; import `textforge` | Version metadata checked against the installed native extension |
-| Core | 0.2.0 base plus approved scoped-map, debug and serialization corrections; API revision in `vendor/CORE_REVISION` (`c2ed4b8f4c96c9e3ddc53576a3cdbf6ccd38bc9e`) | Pinned patched source hashes, method mapping, independent Rust references |
+| Binding | Cargo/Python distribution 0.2.0; import `textforge` | Version metadata checked against the installed native extension |
+| Core | 0.4.0 at revision `6407329777e5d3c3875e8695ebc2b683f4d4f9e1` (`vendor/CORE_REVISION`); 0.3.x was skipped | Pinned patched source hashes, method mapping, independent Rust references |
 | Cargo features | bytecode, watchers, buffered enabled | Runtime features() checked in installed artifacts; test_access only in test-reference |
 | CPython | 3.10–3.14, ordinary GIL builds | CI matrix configured on every wheel platform; local verification is 3.12 |
 | Stable ABI | abi3-py310; metadata allows Python >=3.10 | Later interpreter versions remain unverified until added to CI; free-threaded Python and PyPy are not supported/tested targets |
@@ -33,6 +33,8 @@ rules. A filesystem may reject a non-UTF-8 filename with EILSEQ; only that file-
 case is then skipped. The representation/round-trip checks still run, and other
 I/O errors remain test failures. Windows native-wide checks remain platform-gated.
 
-The scoped replacement-map API and debug fixes track core commit `701c5b2ecbc39dd3f777843c763b6b96a41d70d5`.
-`vendor/CORE_REVISION` identifies the published 0.2.0 base; source hashes pin
-the reviewed additions to that base. Package versions remain unchanged.
+Binding 0.2.0 embeds the TextForge 0.4.0 release commit `6407329777e5d3c3875e8695ebc2b683f4d4f9e1`
+(`vendor/CORE_REVISION`, also the `api_revision` of `api-parity.json`) without
+changes. Binding 0.1.3 embedded the 0.2.0 base; no binding release targeted
+0.3.x. Pipelines and bytecode written for the 0.2.0 engine must be reviewed for
+the behavior changes listed in the 0.2.0 section of the Changelog.

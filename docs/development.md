@@ -183,3 +183,23 @@ public signatures remain unchanged. Previous oracle outputs and errors are kept
 as the behavioral reference, and source integrity hashes cover all Rust sources.
 Release wheel/sdist and compatibility validation are recorded in releasing.md.
 No push, tag or package upload is performed by this preparation.
+
+
+## 2026-11-18: prepare binding 0.2.0 (core 0.4.0)
+
+The maintainer asked to bring the binding up to TextForge 0.4.0, keeping the
+general structure of the API and only adding support for the new features
+(binding support for 0.3.x was skipped). The core is copied unchanged from the
+0.4.0 release commit in CORE_REVISION; only its workspace section is removed.
+
+Adapter work: the error converter copies `BindingErrorDetails` onto the Python
+exception (new `TraceFrame`/`ErrorParameter` classes); the processor gains
+profile and pipeline-name methods; `ExecutionProfile` is a Python value object
+whose presets come from the core. The builder generator now reads
+`Into<TokenWrapper>` parameters (typed `Pipeline | Instruction`), accepts text
+expressions for numeric parameters and prefers the core's new one-line
+summaries. The Rust oracles were regenerated from the real 0.4.0 builder and
+processor; line tests were rewritten for 0-based lines.
+
+Not done here: release wheels, the sdist rebuild outside the checkout, remote CI
+and publication. Run releasing.md before publishing 0.2.0.

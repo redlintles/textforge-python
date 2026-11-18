@@ -3,7 +3,77 @@
 Changes are grouped by binding version. Publication dates are omitted where the
 Git history only establishes a version change, not an uploaded release.
 
-## 0.1.3 — Unreleased
+## 0.2.0 — Unreleased
+
+Embeds **TextForge 0.4.0** (revision `6407329777e5d3c3875e8695ebc2b683f4d4f9e1`); binding releases for
+0.3.x were skipped. The public structure of the API is unchanged: every
+existing method, class and argument keeps its name and order. What changes is
+the engine underneath, so the upgrade notes below come first.
+
+### Upgrade notes (behavior of the embedded engine)
+
+- **Line numbers start at 0**, like every other index: `delete_line(0)` deletes
+  the first line (before: `delete_line(1)`), `insert_line(count, …)` appends, and
+  an interval end past the last line is clamped instead of failing. Subtract one
+  from every line number in plans, saved `.textforge` files and bytecode.
+- `insert(0, text)` inserts at the start of the text; other indices are unchanged.
+- `{{`, `}}`, `[[` and `]]` that form no variable or expression stay in the
+  text (JSON and POSIX regex classes no longer need escaping).
+- `replace_last_with` and `replace_nth_with` expand `$1`, `${name}` and `$$` like
+  the other replacements; a literal `$` needs `$$`.
+- `join_to_camel_case`/`join_to_pascal_case` lowercase each word first; `to_reverse`
+  keeps `\r\n` in order; `len()` in expressions counts characters.
+- `val` cannot be defined twice; variable names must be identifiers, and the
+  built-in names cannot be assigned.
+- `end` inside a block or loop stops only that block or loop.
+- Expression results must be integers or text; the safety limits fail with
+  `LimitExceededError` (code 31) instead of `ValidationError` (20).
+- Error messages are rewritten and `str(error)` follows the new core messages;
+  I/O and regex details moved from the message to `error.cause`. Match on
+  `code`/`kind`, never on message text.
+- `write_pipeline_to_file` and `write_to_bytecode_file` create missing files;
+  bytecode export requires `.textforgebc` or `.tfb`; `.tft` and `.tfb` are read.
+
+### Added
+
+- `TextForgeError` exposes the 0.4.0 details: `kind`, `trace` (new
+  `TraceFrame`), `parameters` (new `ErrorParameter`), `cause`, `hint`,
+  `ignorable` and the plain-text `report`. All survive pickling.
+- Typed builder methods for the new instructions: `try_ignore` (`tryi`),
+  `on_line`/`on_chunk`/`on_line_interval` (`onln`/`onck`/`onlni`),
+  `pipeline_join` (`ppjn`), `write_to_file` (`wtf`), `append_file` (`apf`),
+  `prepend_file` (`ppf`) and `insert_file` (`inf`). Their instruction argument
+  accepts a one-instruction `Pipeline` or an `Instruction`, as Rust's
+  `Into<TokenWrapper>`.
+- Numeric builder parameters accept text holding a `[[ ]]` expression or a
+  `{{ }}` template (`int | str | Variable`), resolved when the instruction runs.
+- `ExecutionProfile` (`balanced`, `low_memory`, `fast`, `preset`, `with_limits`,
+  `unlimited`) and `Processor.set_profile`/`profile`, mirroring the core's
+  spool threshold and safety limits (`max_generated_bytes`, `max_iterations`).
+- `Processor.set_pipeline_name`/`pipeline_name` for `__PIPELINE_NAME__`.
+- Built-in variables `__LEN_CHARS__`, `__LINES__`, `__TEXTFORGE_VERSION__`,
+  `__PIPELINE_NAME__` and `__INPUT_FILE__` work through the existing API.
+- `tests/test_core_040.py` and new Rust oracle cases for the nested instructions;
+  the processor oracle also compares the new error fields.
+
+### Changed
+
+- The generated method docstrings use the core's new summaries; Rustdoc links
+  are rendered as plain names.
+- `docs/api-parity.json` covers the new builder methods, and a test now derives
+  the portable processor surface from the core sources.
+- Direct Rust dependencies follow the core: `rand`/`random-string` removed,
+  `uuid` 1.29.3, `html-escape` 0.3.1.
+
+### Documentation
+
+- README: error details, `try_ignore`, section and file instructions, profiles,
+  pipeline names, expressions in numeric parameters and 0-based lines.
+- Builder reference table regenerated from the real signatures (all methods);
+  line, lifecycle (file side effects, profiles), architecture, parity,
+  compatibility, dependency, compliance and release guides updated for 0.2.0.
+
+## 0.1.3
 
 ### Scoped replacement maps and debug fixes
 

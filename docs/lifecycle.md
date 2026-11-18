@@ -51,3 +51,23 @@ ValueError. Pool and buffer close operations are idempotent.
 Tests use deterministic callbacks and thread synchronization rather than timing
 assumptions to exercise re-entrancy and concurrent mutation. Linux descriptor
 inspection additionally checks spilled storage release after failure/close.
+
+## Side effects of file instructions and profiles (0.2.0)
+
+`write_to_file` writes while the pipeline runs and is not undone: a later
+failure, or a `try_ignore` that ignores a failure after it, leaves the written
+file in place (writing it again replaces it atomically). `append_file`,
+`prepend_file` and `insert_file` read their file on every run. `pipeline_join`
+loads the joined file once, when the plan is compiled or registered; editing the
+file afterwards does not change that executable, and bytecode exports embed it.
+Relative paths start from the process working directory, because plans built in
+Python have no pipeline file of their own.
+
+`try_ignore` restores the text, variables, blocks, replacement maps and `end`
+state it received; it never ignores `LimitExceededError`.
+
+A profile belongs to one `Processor` and applies to its later runs, buffered
+processing included; changing it never changes results within the limits.
+`Pipeline.compile()` executables use the core default profile (`balanced`). Error
+details are copied into the Python exception when it is raised, so they stay valid
+after the processor or pipeline is gone.

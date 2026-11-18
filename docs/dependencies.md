@@ -3,33 +3,34 @@
 Verified against the official crates.io sparse index, PyPI JSON API and GitHub
 release endpoints on 2026-10-30. These are stable, non-yanked Rust releases;
 Python tools and Actions retain the pins from the 0.1.2 audit; the same tool
-versions are used to validate 0.1.3.
+versions are used to validate 0.1.3 and 0.2.0.
 
 ## Rust
 
-| Direct dependency | Locked version retained for 0.1.3 |
+| Direct dependency | Locked version for 0.2.0 |
 | --- | --- |
 | PyO3 | 0.30.1 |
 | tempfile | 3.27.0 |
 | colored | 3.1.1 |
 | regex | 1.13.1 |
 | shell-words | 1.1.1 |
-| uuid | 1.29.0 |
+| uuid | 1.29.3 |
 | urlencoding | 2.1.3 |
-| html-escape | 0.3.0 |
+| html-escape | 0.3.1 |
 | serde_json | 1.0.154 |
 | serde | 1.0.229 |
-| rand | 0.10.3 |
-| random-string | 1.1.0 |
 | clap | 4.6.7 |
 | rayon | 1.12.0 |
 | evalexpr | 13.1.0 |
+| unicode-normalization | 0.1.26 |
 
-Binding 0.1.3 embeds TextForge 0.2.0 at revision
-`c2ed4b8f4c96c9e3ddc53576a3cdbf6ccd38bc9e`, including the allocation optimizations. The core sources
-are copied from that revision; only its workspace section is removed for the
-independent binding workspace. The existing locked dependency versions and Python
-build/development tool pins are retained. No dependency upgrade is part of 0.1.3.
+Binding 0.2.0 embeds TextForge 0.4.0 at revision
+`6407329777e5d3c3875e8695ebc2b683f4d4f9e1`. The core sources are copied from that revision; only its workspace
+section is removed for the independent binding workspace. The core's own
+requirements decide the graph: `rand` and `random-string` (with the unmaintained
+`instant`) left it in TextForge 0.3.0, `uuid` and `html-escape` moved to the
+versions above, and `shell-words` is now only a core dev-dependency. Python
+build/development tool pins are retained. The minimum Rust version stays 1.89.
 
 The release dates and latest-version statements above describe the earlier
 2026-10-30 dependency audit; they are not a fresh claim about registry releases.

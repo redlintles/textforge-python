@@ -4,8 +4,10 @@ Typed Python bindings for [TextForge](https://github.com/redlintles/textforge),
 implemented with PyO3 against its owned portable API. Distribution name:
 `textforgers`; Python import: `textforge`. Requires Python 3.10 or newer.
 
-This checkout prepares **0.1.3**. See [Changelog.md](Changelog.md) for changes
-since 0.1.2 and [the dependency snapshot](docs/dependencies.md) for tested versions.
+This checkout prepares **0.2.0**, which embeds TextForge **0.4.0**. See
+[Changelog.md](Changelog.md) for changes since 0.1.3 — including the upgrade
+notes for pipelines written for TextForge 0.2.0 — and
+[the dependency snapshot](docs/dependencies.md) for tested versions.
 
 For a published release, use `pip install textforgers`; to build this checkout,
 use the commands below. Do not install the unrelated `textforge` distribution as a substitute.
@@ -66,7 +68,9 @@ blocks = Pipeline().block_assoc("suffix", lambda b: b.add_to_end("!"))
 assert blocks.call_block("suffix").compile()("é") == "é!"
 ```
 
-Text arguments accept `str | Variable`; counts and indices accept `int | Variable`.
+Text arguments accept `str | Variable`; counts and indices accept
+`int | str | Variable`, where text is a `[[ ]]` expression or `{{ }}` template the
+engine resolves when the instruction runs (`on_line("[[__LINES__ - 1]]", ...)`).
 `val`, `var` and `mut_var` also accept integer values and follow Rust's conversion
 to string-valued context entries. `get_var("name")` is the convenient counterpart
 of Rust's helper; `Variable("name")` remains available. Booleans and unsupported
@@ -77,8 +81,9 @@ then pass the portable layer's native-size checks.
 snapshot or a `Variable` reference. It repeats exactly one instruction, as in
 Rust; empty plans, multiple instructions and logical groups are rejected. Strings
 retain the core's `{{variable}}` and `[[ expression ]]` interpolation semantics.
-Indices, ranges and padding follow the Rust operations, including `insert`
-inserting **after** the indexed character. See the
+Indices, ranges and padding follow the Rust operations: every index, line
+numbers included, starts at 0, and `insert(0, text)` inserts at the start while
+any other index inserts **after** that character. See the
 [complete builder method reference](docs/builder-api.md).
 
 `block_assoc` and `if_do_contains_each` accept either a reusable `Pipeline` body
@@ -110,22 +115,19 @@ try:
 except TextForgeError as error:
     print(error.stage, error.code, error.message, error.instruction, error.input)
 
-# Current core export methods require existing destinations. They overwrite files.
+# Export methods create or replace their destination.
 path = Path("pipeline.textforge")
-path.touch(exist_ok=True)
 processor.write_pipeline_to_file(identifier, path)
 restored = processor.get_pipeline_from_file(path)
 assert processor.process_all(restored, " é ") == "é"
 
 bytecode = Path("pipeline.textforgebc")
-bytecode.touch(exist_ok=True)
 processor.write_to_bytecode_file(identifier, bytecode)
 restored_bytecode = processor.read_from_bytecode_file(bytecode)
 ```
 
-The implementation uses the actual core extensions `.textforge` and
-`.textforgebc`. Some older project notes mention `.tft`/`.tfb`; those are not the
-current core's export/import contract. Text and input documents are UTF-8.
+Text pipelines use `.textforge` (or `.tft`) and bytecode `.textforgebc` (or
+`.tfb`); bytecode export requires a bytecode extension. Text and input documents are UTF-8.
 Paths accept `FilePath`, strings, bytes and `os.PathLike` values, preserving
 Unix byte names and Windows UTF-16 names. Unix surrogateescape and Windows
 surrogatepass conversion avoid replacing unrepresentable characters. Explicit
@@ -141,7 +143,8 @@ distinct output paths. Zero threads selects the engine's automatic worker count.
 
 `Processor` also supports `process_single`, debug execution, `run_transform`,
 `clone_pipeline`, `remove_transform`, `transform_exists`, `list_transforms`,
-`get_text_transform_vec`, and typed `get_transform_vec` snapshots. See the shipped
+`get_text_transform_vec`, typed `get_transform_vec` snapshots, execution profiles
+(`set_profile`/`profile`) and pipeline names (`set_pipeline_name`/`pipeline_name`). See the shipped
 PEP 561 annotations and [architecture](docs/architecture.md).
 
 ## Build and check
@@ -155,11 +158,11 @@ python3 -m venv .venv
 . .venv/bin/activate
 python -m pip install --upgrade pip==26.2.2
 python -m pip install --group dev
-maturin build --release --locked --sdist --out dist/0.1.3
-python -m pip install --force-reinstall --no-deps --no-index --find-links dist/0.1.3 textforgers==0.1.3
+maturin build --release --locked --sdist --out dist/0.2.0
+python -m pip install --force-reinstall --no-deps --no-index --find-links dist/0.2.0 textforgers==0.2.0
 python scripts/check.py
-python scripts/check_distribution.py --wheel-dir dist/0.1.3 --types
-python -m twine check dist/0.1.3/*
+python scripts/check_distribution.py --wheel-dir dist/0.2.0 --types
+python -m twine check dist/0.2.0/*
 ```
 
 On Windows, activate the environment with `.venv\Scripts\Activate.ps1` in
@@ -229,7 +232,8 @@ and their evidence are tracked in [the compliance record](docs/compliance.md).
 
 ## Logical lines (introduced in 0.1.2)
 
-This binding includes TextForge **0.2.0**. Line indices start at **1**:
+This binding includes TextForge **0.4.0**. Line numbers start at **0**, like every
+other index (they started at 1 up to binding 0.1.3):
 
 ```python
 from textforge import Pipeline
@@ -246,6 +250,63 @@ assert pipeline("é\n\né\n🍌") == "é | 🍌"
 
 See [line operations](docs/lines.md) for every typed method, terminator rules and
 error behavior. The exact core commit is pinned in `vendor/CORE_REVISION`.
+
+## Errors that explain themselves (TextForge 0.4.0)
+
+Besides `stage`, `code`, `message`, `instruction` and `input`, every
+`TextForgeError` carries the core's details: `kind` (the stable name of the code),
+`trace` (`TraceFrame`s, outermost first, with `file:line` and what a container was
+doing), `parameters` (`ErrorParameter`s with the values the instruction ran with),
+`cause` (the I/O or regex error behind it), `hint`, `ignorable` and the plain-text
+`report` that `txf` prints.
+
+```python
+from textforge import Pipeline, TextForgeError
+
+try:
+    Pipeline().delete_single(9).compile()("abc")
+except TextForgeError as error:
+    assert error.kind == "IndexOutOfRange"
+    assert error.trace[-1].instruction == "dls 9;"
+    assert (error.parameters[0].name, error.parameters[0].value) == ("index", "9")
+    assert error.ignorable
+    print(error.report)
+```
+
+## Robust pipelines: try_ignore, sections, files and profiles
+
+`try_ignore(inner)` runs one instruction and, when it fails, continues as if it had
+not run (text, variables, blocks and maps are put back). Safety limits are never
+ignored. `on_line`, `on_chunk` and `on_line_interval` apply one instruction to a
+part of the text, whose indices then count from the start of that part.
+
+```python
+from textforge import ExecutionProfile, Pipeline, Processor
+
+robust = (
+    Pipeline()
+    .try_ignore(Pipeline().delete_single(99))
+    .on_line(0, Pipeline().to_uppercase_all())
+    .on_line("[[__LINES__ - 1]]", Pipeline().add_to_end("."))
+)
+assert robust.compile()("title\nbody") == "TITLE\nbody."
+
+processor = Processor()
+processor.set_profile(
+    ExecutionProfile.balanced().with_limits(max_generated_bytes=1024, max_iterations=None)
+)
+identifier = processor.register(Pipeline().add_to_end(" ({{__PIPELINE_NAME__}})"))
+processor.set_pipeline_name(identifier, "notes")
+assert processor.process_all(identifier, "draft") == "draft (notes)"
+```
+
+File instructions read and write UTF-8 files while the pipeline runs:
+`write_to_file(path)` (the text is unchanged), `append_file`, `prepend_file`,
+`insert_file(index, path)` and `pipeline_join(path)`, which runs another text or
+bytecode pipeline in a new context (bytecode exports embed it). Relative paths of
+pipelines built in Python start from the working directory. Built-in variables
+`__LEN_CHARS__`, `__LINES__`, `__TEXTFORGE_VERSION__`, `__PIPELINE_NAME__` and
+`__INPUT_FILE__` can be read in `{{ }}` and `[[ ]]`.
 
 ## Scoped replacement maps
 

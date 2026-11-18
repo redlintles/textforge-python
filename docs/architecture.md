@@ -1,10 +1,14 @@
 # Binding architecture
 
 `python/textforge/__init__.py` supplies a fully annotated, immutable construction
-facade. All 58 named instruction methods are explicit Python definitions matching the
-vendored Rust builder, plus its block/conditional methods. A maintenance generator
+facade. All 86 generated instruction methods (plus `define_replace_map`) are
+explicit Python definitions matching the vendored Rust builder, plus its
+block/conditional methods. A maintenance generator
 reads the pinned Rust trait signatures and registry parameter categories, emits
-statically typed methods into Pipeline, and fails CI if that source drifts. There
+statically typed methods into Pipeline, and fails CI if that source drifts.
+Numeric parameters are typed `int | str | Variable` (text is a `[[ ]]`
+expression or `{{ }}` template for the engine); Rust `Into<TokenWrapper>`
+parameters (`try_ignore`, `on_*`) are typed `Pipeline | Instruction`. There
 is no runtime method injection or __getattr__ dispatch. Builder-specific numeric
 normalization for val/var/mut_var is preserved in the argument conversion helpers.
 Native classes `Instruction` and `Variable` are immutable; instruction
@@ -23,7 +27,12 @@ conversion and structural errors to `compile()` or `register()`.
 `src/lib.rs` translates Python arguments into `Argument` and `InstructionSpec`,
 then delegates to `PipelinePlan`, `CompiledPipeline`, and `PortableProcessor`.
 There is no separate DSL parser, engine, opcode table or execution policy. Error
-attributes come directly from `BindingError`; stage names are lower-case.
+attributes come directly from `BindingError` and its `BindingErrorDetails`
+(`kind`, `trace`, `parameters`, `cause`, `hint`, `ignorable`, `report`); stage
+names are lower-case. `TraceFrame` and `ErrorParameter` are frozen native
+values that compare by content and pickle. `ExecutionProfile` is a Python value
+object; its presets are read from the core (`profile_preset`) and applied with
+`PortableProcessor::set_profile`, so the binding holds no copy of the defaults.
 Unsupported Python types raise TypeError; unsigned overflow raises OverflowError.
 Core conversion, validation, execution and persistence errors raise TextForgeError.
 
@@ -49,9 +58,8 @@ excluding `src/bindings`. The core manifest's original workspace section was
 removed so that it participates as a path dependency in this independent workspace.
 Large benchmark data files are omitted; the unit/integration tests generate their
 own data or use the included pipeline fixtures. There are no core implementation
-changes in the snapshot. Binding 0.1.3 uses the optimized core 0.2.0 revision
-recorded in CORE_REVISION, with its original dependency bounds and the existing
-locked dependency versions. The integrity map hashes every vendored Rust source
+changes in the snapshot. Binding 0.2.0 uses the core 0.4.0 release revision
+recorded in CORE_REVISION, with its original dependency bounds. The integrity map hashes every vendored Rust source
 file, including transform implementations and their tests; it is not limited to
 public API files. See dependencies.md.
 
@@ -85,13 +93,15 @@ resolve at runtime and are visible to static checkers and IDEs.
 
 `scripts/generate_builder_reference.py` builds a separate Rust reference executable
 using TextForgeBuilderMethods and the original builder's doctest inputs, plus
-logical examples. Its saved results are compared to Python execution for all 61
-builder methods. Expected outputs are obtained from actual Rust builder calls,
+logical examples. Its saved results (89 cases) are compared to Python execution
+for every builder method except the five file instructions, which
+`tests/test_core_040.py` checks against real files. Expected outputs are obtained from actual Rust builder calls,
 not from the portable mnemonic mapping. CI re-executes the oracle before Python
 tests, so stale fixtures fail instead of silently blessing changed behavior.
 
 The reference executable's `test-reference` feature enables the core's test_access
-solely to construct the typed inner token required by Rust's iter test. Those
+solely to construct the typed inner tokens required by Rust's `iter`, `try_ignore`
+and `on_*` cases (`Box<dyn InstructionMethods>` values of public transform types). Those
 internal types are not public without test_access in the pinned core. Distributed
 wheels enable the production extension-module feature and core bytecode, watchers
 and buffered features; test helpers are not enabled in release packages.
@@ -100,7 +110,8 @@ and buffered features; test helpers are not enabled in release packages.
 ## Processor conformance
 
 The separate processor_reference Rust executable covers successful results and
-all structured error fields. scripts/generate_processor_reference.py --check
+all structured error fields, including the 0.4.0 details (`kind`, `cause`,
+`hint`, `ignorable` and `report`). scripts/generate_processor_reference.py --check
 re-executes it and verifies the pinned revision and saved fixture. Production
 adapters never use this executable or test-only core internals. The API mapping
 also records source hashes so signature/behavior changes force a parity review.
