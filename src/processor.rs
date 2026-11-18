@@ -4,7 +4,29 @@ use crate::{
     observers::Observers,
     paths::{BatchPool, FilePath},
 };
-use textforge::api::portable::PortableProcessor;
+use pyo3::exceptions::PyValueError;
+use textforge::api::{ExecutionProfile, Limits, portable::PortableProcessor};
+
+/// Engine resources as plain values: `(spool_threshold, max_generated_bytes,
+/// max_iterations)`; `None` means unlimited.
+pub(super) type ProfileValues = (u64, Option<u64>, Option<u64>);
+
+fn profile_values(profile: ExecutionProfile) -> ProfileValues {
+    (
+        profile.spool_threshold as u64,
+        profile.limits.max_generated_bytes,
+        profile.limits.max_iterations,
+    )
+}
+
+/// Values of the core preset `balanced`, `low-memory` or `fast`.
+/// Python: `textforge.ExecutionProfile.preset("fast")`.
+#[pyfunction]
+pub(super) fn profile_preset(name: &str) -> PyResult<ProfileValues> {
+    ExecutionProfile::preset(name)
+        .map(profile_values)
+        .map_err(|error| PyValueError::new_err(error.error_code.message().to_string()))
+}
 
 /// Registry and file processor; Python: `processor = Processor()`.
 #[pyclass(module = "textforge")]
@@ -20,6 +42,34 @@ impl Processor {
     }
     fn register(&mut self, py: Python<'_>, plan: &Plan) -> PyResult<String> {
         self.inner.register(&plan.inner).map_err(|e| error(py, e))
+    }
+    fn set_profile(
+        &mut self,
+        spool_threshold: u64,
+        max_generated_bytes: Option<u64>,
+        max_iterations: Option<u64>,
+    ) -> PyResult<()> {
+        let spool_threshold = usize::try_from(spool_threshold)
+            .map_err(|_| PyValueError::new_err("spool_threshold is too large for this platform"))?;
+        self.inner.set_profile(ExecutionProfile {
+            spool_threshold,
+            limits: Limits {
+                max_generated_bytes,
+                max_iterations,
+            },
+        });
+        Ok(())
+    }
+    fn profile(&self) -> ProfileValues {
+        profile_values(self.inner.profile())
+    }
+    fn set_pipeline_name(&mut self, py: Python<'_>, id: &str, name: String) -> PyResult<()> {
+        self.inner
+            .set_pipeline_name(id, name)
+            .map_err(|e| error(py, e))
+    }
+    fn pipeline_name(&self, py: Python<'_>, id: &str) -> PyResult<String> {
+        self.inner.pipeline_name(id).map_err(|e| error(py, e))
     }
     fn remove_transform(&mut self, py: Python<'_>, id: &str) -> PyResult<()> {
         self.inner.remove_transform(id).map_err(|e| error(py, e))

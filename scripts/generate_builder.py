@@ -36,9 +36,12 @@ def render() -> str:
         if token_match is None:
             raise ValueError(f"Unknown Rust builder implementation: {name}")
         token = token_match[1]
-        parameters = re.findall(r"(\w+): impl Into<ValType>", signature)
+        parameters = re.findall(r"(\w+): impl Into<(ValType|TokenWrapper)>", signature)
         kinds = syntax[token]
-        if len(parameters) != len(kinds):
+        if len(parameters) != len(kinds) or any(
+            target == "TokenWrapper" and kind != "Token"
+            for (_, target), kind in zip(parameters, kinds, strict=False)
+        ):
             raise ValueError(f"Parameter mismatch for {name}: {parameters}, {kinds}")
         docs_match = re.search(r"((?:    ///[^\n]*\n|[ \t]*\n)*)$", trait[: match.start()])
         paragraphs = (
@@ -46,8 +49,18 @@ def render() -> str:
             if docs_match
             else []
         )
-        description = " ".join(paragraphs[1].split()) if len(paragraphs) > 1 else ""
-        if not description or "```" in description:
+        # Newer core docs open with "MNEMONIC — summary"; older ones with a bare
+        # title such as "TBS - Trim Both Sides", followed by the description.
+        first = " ".join(paragraphs[0].split()) if paragraphs else ""
+        summary = first.split(" — ", 1)[1] if " — " in first else ""
+        second = " ".join(paragraphs[1].split()) if len(paragraphs) > 1 else ""
+        if "```" in second:
+            second = ""
+        if summary and second and not second.startswith(summary):
+            description = f"{summary} {second}"
+        else:
+            description = second or summary
+        if not description:
             description = {
                 "mut_var": "Assign a new value to a mutable execution-context variable.",
                 "eval": "Evaluate an expression and store its result in the named variable.",
@@ -56,15 +69,21 @@ def render() -> str:
                 "end": "End the current logical group, subject to core structural validation.",
             }.get(name, name.replace("_", " ").capitalize() + ".")
         description = description.replace('"', "'").replace("**", "")
-        description = textwrap.fill(description, width=84).replace("\n", "\n        ")
+        # Rustdoc intra-doc links mean nothing in Python: keep their text.
+        description = re.sub(r"\[(`[^`]+`)\]\([^)]*\)", r"\1", description)
+        description = textwrap.fill(description, width=84, break_on_hyphens=False).replace(
+            "\n", "\n        "
+        )
         typed = []
         values = []
-        for parameter, kind in zip(parameters, kinds, strict=True):
+        for (parameter, target), kind in zip(parameters, kinds, strict=True):
             annotation, converter = {
                 "String": ("str | Variable", "_text"),
-                "Usize": ("int | Variable", "_number"),
+                "Usize": ("int | str | Variable", "_numeric"),
                 "Token": ("Pipeline | Instruction | Variable", "_instruction"),
             }[kind]
+            if target == "TokenWrapper":
+                annotation, converter = "Pipeline | Instruction", "_token"
             if name in {"val", "var", "mut_var"} and parameter == "var_value":
                 annotation, converter = "str | int | Variable", "_value"
             typed.append(f"{parameter}: {annotation}")

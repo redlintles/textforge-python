@@ -11,12 +11,12 @@ from dataclasses import dataclass
 from typing import TypeAlias, overload
 
 from . import _native
-from ._arguments import _instruction, _number, _text, _value
+from ._arguments import _instruction, _numeric, _text, _token, _value
 from ._buffers import BufferOptions, PortableBuffer, StreamReader, StreamWriter
 from ._native import (
     CompiledPipeline as CompiledPipeline,
 )
-from ._native import Features, FilePath, Observation, features
+from ._native import ErrorParameter, Features, FilePath, Observation, TraceFrame, features
 from ._native import (
     Instruction as Instruction,
 )
@@ -32,6 +32,7 @@ from ._native import (
 from ._observers import Observers
 from ._paths import Path
 from ._processor import BatchPool, BufferTask, FileTask, Processor
+from ._profiles import ExecutionProfile
 from ._replace_maps import ReplaceMapBody, ReplaceMapBuilder, _configure_map, _ReplaceMapDefinition
 
 Argument: TypeAlias = str | int | Variable | Instruction
@@ -41,6 +42,8 @@ __all__ = [
     "BatchPool",
     "BufferOptions",
     "BufferTask",
+    "ErrorParameter",
+    "ExecutionProfile",
     "Features",
     "FilePath",
     "FileTask",
@@ -58,6 +61,7 @@ __all__ = [
     "ReplaceMapBuilder",
     "ReplaceMapBody",
     "TextForgeError",
+    "TraceFrame",
     "Variable",
     "__version__",
     "get_var",
@@ -167,84 +171,86 @@ class Pipeline:
 
     def append_line(self, text: str | Variable) -> Pipeline:
         """Append one logical line, preserving the final-terminator convention. Line numbers
-        start at one; see the logical-line guide.
+        start at 0; see the logical-line guide.
 
         Matches Rust ``TextForgeBuilderMethods::append_line``.
         """
         return self._operation("apl", _text(text, "text"))
 
-    def delete_line(self, line: int | Variable) -> Pipeline:
-        """Delete one line, including its terminator. Line numbers start at one; see the
+    def delete_line(self, line: int | str | Variable) -> Pipeline:
+        """Delete one line, including its terminator. Line numbers start at 0; see the
         logical-line guide.
 
         Matches Rust ``TextForgeBuilderMethods::delete_line``.
         """
-        return self._operation("dln", _number(line, "line"))
+        return self._operation("dln", _numeric(line, "line"))
 
-    def delete_lines_after(self, line: int | Variable) -> Pipeline:
+    def delete_lines_after(self, line: int | str | Variable) -> Pipeline:
         """Delete lines after the given line, retaining that line and its terminator. Line
-        numbers start at one; see the logical-line guide.
+        numbers start at 0; see the logical-line guide.
 
         Matches Rust ``TextForgeBuilderMethods::delete_lines_after``.
         """
-        return self._operation("dlna", _number(line, "line"))
+        return self._operation("dlna", _numeric(line, "line"))
 
-    def delete_lines_before(self, line: int | Variable) -> Pipeline:
-        """Delete lines before the given line, retaining that line. Line numbers start at one;
+    def delete_lines_before(self, line: int | str | Variable) -> Pipeline:
+        """Delete lines before the given line, retaining that line. Line numbers start at 0;
         see the logical-line guide.
 
         Matches Rust ``TextForgeBuilderMethods::delete_lines_before``.
         """
-        return self._operation("dlnb", _number(line, "line"))
+        return self._operation("dlnb", _numeric(line, "line"))
 
-    def select_lines(self, start_line: int | Variable, end_line: int | Variable) -> Pipeline:
+    def select_lines(
+        self, start_line: int | str | Variable, end_line: int | str | Variable
+    ) -> Pipeline:
         """Select an inclusive line interval and discard the remaining lines. Line numbers
-        start at one; see the logical-line guide.
+        start at 0; see the logical-line guide.
 
         Matches Rust ``TextForgeBuilderMethods::select_lines``.
         """
         return self._operation(
-            "slnc", _number(start_line, "start_line"), _number(end_line, "end_line")
+            "slnc", _numeric(start_line, "start_line"), _numeric(end_line, "end_line")
         )
 
     def delete_lines_interval(
-        self, start_line: int | Variable, end_line: int | Variable
+        self, start_line: int | str | Variable, end_line: int | str | Variable
     ) -> Pipeline:
-        """Delete an inclusive interval of lines and retain the rest. Line numbers start at
-        one; see the logical-line guide.
+        """Delete an inclusive interval of lines and retain the rest. Line numbers start at 0;
+        see the logical-line guide.
 
         Matches Rust ``TextForgeBuilderMethods::delete_lines_interval``.
         """
         return self._operation(
-            "dlni", _number(start_line, "start_line"), _number(end_line, "end_line")
+            "dlni", _numeric(start_line, "start_line"), _numeric(end_line, "end_line")
         )
 
-    def insert_line(self, line: int | Variable, text: str | Variable) -> Pipeline:
-        """Insert before a line; line count plus one appends a line. Line numbers start at one;
-        see the logical-line guide.
+    def insert_line(self, line: int | str | Variable, text: str | Variable) -> Pipeline:
+        """Insert before a line; the line count (one past the last line) appends a line. Line
+        numbers start at 0; see the logical-line guide.
 
         Matches Rust ``TextForgeBuilderMethods::insert_line``.
         """
-        return self._operation("inl", _number(line, "line"), _text(text, "text"))
+        return self._operation("inl", _numeric(line, "line"), _text(text, "text"))
 
     def remove_line_breaks(self) -> Pipeline:
         """Remove all recognized line terminators without inserting spaces. Line numbers start
-        at one; see the logical-line guide.
+        at 0; see the logical-line guide.
 
         Matches Rust ``TextForgeBuilderMethods::remove_line_breaks``.
         """
         return self._operation("nln")
 
-    def replace_line(self, line: int | Variable, text: str | Variable) -> Pipeline:
-        """Replace a line content, preserving its terminator. Line numbers start at one; see
-        the logical-line guide.
+    def replace_line(self, line: int | str | Variable, text: str | Variable) -> Pipeline:
+        """Replace a line content, preserving its terminator. Line numbers start at 0; see the
+        logical-line guide.
 
         Matches Rust ``TextForgeBuilderMethods::replace_line``.
         """
-        return self._operation("rln", _number(line, "line"), _text(text, "text"))
+        return self._operation("rln", _numeric(line, "line"), _text(text, "text"))
 
     def prepend_line(self, text: str | Variable) -> Pipeline:
-        """Prepend one logical line. Line numbers start at one; see the logical-line guide.
+        """Prepend one logical line. Line numbers start at 0; see the logical-line guide.
 
         Matches Rust ``TextForgeBuilderMethods::prepend_line``.
         """
@@ -252,22 +258,22 @@ class Pipeline:
 
     def delete_empty_lines(self) -> Pipeline:
         """Delete empty lines; lines containing whitespace are retained. Line numbers start at
-        one; see the logical-line guide.
+        0; see the logical-line guide.
 
         Matches Rust ``TextForgeBuilderMethods::delete_empty_lines``.
         """
         return self._operation("dle")
 
     def keep_lines_matching(self, pattern: str | Variable) -> Pipeline:
-        """Keep lines whose content matches a regular expression. Line numbers start at one;
-        see the logical-line guide.
+        """Keep lines whose content matches a regular expression. Line numbers start at 0; see
+        the logical-line guide.
 
         Matches Rust ``TextForgeBuilderMethods::keep_lines_matching``.
         """
         return self._operation("klm", _text(pattern, "pattern"))
 
     def delete_lines_matching(self, pattern: str | Variable) -> Pipeline:
-        """Delete lines whose content matches a regular expression. Line numbers start at one;
+        """Delete lines whose content matches a regular expression. Line numbers start at 0;
         see the logical-line guide.
 
         Matches Rust ``TextForgeBuilderMethods::delete_lines_matching``.
@@ -276,7 +282,7 @@ class Pipeline:
 
     def reverse_lines(self) -> Pipeline:
         """Reverse line contents while preserving terminators at their original positions. Line
-        numbers start at one; see the logical-line guide.
+        numbers start at 0; see the logical-line guide.
 
         Matches Rust ``TextForgeBuilderMethods::reverse_lines``.
         """
@@ -284,7 +290,7 @@ class Pipeline:
 
     def unique_lines(self) -> Pipeline:
         """Keep the first occurrence of each exact line content, in original order. Line
-        numbers start at one; see the logical-line guide.
+        numbers start at 0; see the logical-line guide.
 
         Matches Rust ``TextForgeBuilderMethods::unique_lines``.
         """
@@ -292,7 +298,7 @@ class Pipeline:
 
     def join_lines(self, separator: str | Variable) -> Pipeline:
         """Join line contents with a separator, discarding the final terminator. Line numbers
-        start at one; see the logical-line guide.
+        start at 0; see the logical-line guide.
 
         Matches Rust ``TextForgeBuilderMethods::join_lines``.
         """
@@ -347,30 +353,32 @@ class Pipeline:
         """
         return self._operation("dll")
 
-    def delete_after(self, index: int | Variable) -> Pipeline:
+    def delete_after(self, index: int | str | Variable) -> Pipeline:
         """Removes all characters after the provided `index`, keeping the content from
         `0..=index`.
 
         Matches Rust ``TextForgeBuilderMethods::delete_after``.
         """
-        return self._operation("dla", _number(index, "index"))
+        return self._operation("dla", _numeric(index, "index"))
 
-    def delete_before(self, index: int | Variable) -> Pipeline:
+    def delete_before(self, index: int | str | Variable) -> Pipeline:
         """Removes all characters before the provided `index`, keeping the content from
         `index..`.
 
         Matches Rust ``TextForgeBuilderMethods::delete_before``.
         """
-        return self._operation("dlb", _number(index, "index"))
+        return self._operation("dlb", _numeric(index, "index"))
 
-    def delete_chunk(self, start_index: int | Variable, end_index: int | Variable) -> Pipeline:
+    def delete_chunk(
+        self, start_index: int | str | Variable, end_index: int | str | Variable
+    ) -> Pipeline:
         """Removes all characters between `start_index` and `end_index` (inclusive),
         effectively slicing out that segment from the input string.
 
         Matches Rust ``TextForgeBuilderMethods::delete_chunk``.
         """
         return self._operation(
-            "dlc", _number(start_index, "start_index"), _number(end_index, "end_index")
+            "dlc", _numeric(start_index, "start_index"), _numeric(end_index, "end_index")
         )
 
     def replace_all_with(
@@ -407,7 +415,7 @@ class Pipeline:
         )
 
     def replace_nth_with(
-        self, pattern: str | Variable, text_to_replace: str | Variable, index: int | Variable
+        self, pattern: str | Variable, text_to_replace: str | Variable, index: int | str | Variable
     ) -> Pipeline:
         """Replaces the nth occurrence (0-based) of `pattern` with `text_to_replace`. If the
         index does not exist, no changes occur.
@@ -418,11 +426,11 @@ class Pipeline:
             "rnw",
             _text(pattern, "pattern"),
             _text(text_to_replace, "text_to_replace"),
-            _number(index, "index"),
+            _numeric(index, "index"),
         )
 
     def replace_count_with(
-        self, pattern: str | Variable, text_to_replace: str | Variable, count: int | Variable
+        self, pattern: str | Variable, text_to_replace: str | Variable, count: int | str | Variable
     ) -> Pipeline:
         """Replaces up to count occurrences of `pattern` with `text_to_replace`, scanning from
         left to right.
@@ -433,37 +441,39 @@ class Pipeline:
             "rcw",
             _text(pattern, "pattern"),
             _text(text_to_replace, "text_to_replace"),
-            _number(count, "count"),
+            _numeric(count, "count"),
         )
 
-    def rotate_left(self, times: int | Variable) -> Pipeline:
+    def rotate_left(self, times: int | str | Variable) -> Pipeline:
         """Rotates the characters of the input to the left `times` positions.
 
         Matches Rust ``TextForgeBuilderMethods::rotate_left``.
         """
-        return self._operation("rtl", _number(times, "times"))
+        return self._operation("rtl", _numeric(times, "times"))
 
-    def rotate_right(self, times: int | Variable) -> Pipeline:
+    def rotate_right(self, times: int | str | Variable) -> Pipeline:
         """Rotates the characters of the input to the right `times` positions.
 
         Matches Rust ``TextForgeBuilderMethods::rotate_right``.
         """
-        return self._operation("rtr", _number(times, "times"))
+        return self._operation("rtr", _numeric(times, "times"))
 
-    def repeat(self, times: int | Variable) -> Pipeline:
+    def repeat(self, times: int | str | Variable) -> Pipeline:
         """Repeats the entire input string `times` times.
 
         Matches Rust ``TextForgeBuilderMethods::repeat``.
         """
-        return self._operation("rpt", _number(times, "times"))
+        return self._operation("rpt", _numeric(times, "times"))
 
-    def select(self, start_index: int | Variable, end_index: int | Variable) -> Pipeline:
+    def select(
+        self, start_index: int | str | Variable, end_index: int | str | Variable
+    ) -> Pipeline:
         """Extracts a substring from `start_index` to `end_index` (inclusive).
 
         Matches Rust ``TextForgeBuilderMethods::select``.
         """
         return self._operation(
-            "slt", _number(start_index, "start_index"), _number(end_index, "end_index")
+            "slt", _numeric(start_index, "start_index"), _numeric(end_index, "end_index")
         )
 
     def to_uppercase_all(self) -> Pipeline:
@@ -480,24 +490,24 @@ class Pipeline:
         """
         return self._operation("tla")
 
-    def to_uppercase_single(self, index: int | Variable) -> Pipeline:
+    def to_uppercase_single(self, index: int | str | Variable) -> Pipeline:
         """Converts only the character at `index` to uppercase. If the index is out of range,
         no character is modified.
 
         Matches Rust ``TextForgeBuilderMethods::to_uppercase_single``.
         """
-        return self._operation("tucs", _number(index, "index"))
+        return self._operation("tucs", _numeric(index, "index"))
 
-    def to_lowercase_single(self, index: int | Variable) -> Pipeline:
+    def to_lowercase_single(self, index: int | str | Variable) -> Pipeline:
         """Converts only the character at `index` to lowercase. If the index is out of range,
         no character is modified.
 
         Matches Rust ``TextForgeBuilderMethods::to_lowercase_single``.
         """
-        return self._operation("tlcs", _number(index, "index"))
+        return self._operation("tlcs", _numeric(index, "index"))
 
     def to_uppercase_chunk(
-        self, start_index: int | Variable, end_index: int | Variable
+        self, start_index: int | str | Variable, end_index: int | str | Variable
     ) -> Pipeline:
         """Converts a substring between `start_index` and `end_index` (inclusive) to uppercase.
         Returns an error if the indices are invalid.
@@ -505,11 +515,11 @@ class Pipeline:
         Matches Rust ``TextForgeBuilderMethods::to_uppercase_chunk``.
         """
         return self._operation(
-            "tucc", _number(start_index, "start_index"), _number(end_index, "end_index")
+            "tucc", _numeric(start_index, "start_index"), _numeric(end_index, "end_index")
         )
 
     def to_lowercase_chunk(
-        self, start_index: int | Variable, end_index: int | Variable
+        self, start_index: int | str | Variable, end_index: int | str | Variable
     ) -> Pipeline:
         """Converts a substring between `start_index` and `end_index` (inclusive) to lowercase.
         Returns an error if the indices are invalid.
@@ -517,7 +527,7 @@ class Pipeline:
         Matches Rust ``TextForgeBuilderMethods::to_lowercase_chunk``.
         """
         return self._operation(
-            "tlcc", _number(start_index, "start_index"), _number(end_index, "end_index")
+            "tlcc", _numeric(start_index, "start_index"), _numeric(end_index, "end_index")
         )
 
     def capitalize_first_word(self) -> Pipeline:
@@ -535,42 +545,46 @@ class Pipeline:
         """
         return self._operation("clw")
 
-    def split_select(self, pattern: str | Variable, index: int | Variable) -> Pipeline:
+    def split_select(self, pattern: str | Variable, index: int | str | Variable) -> Pipeline:
         """Splits the input string using `pattern` and selects the part at `index`. If the
         index does not exist, returns an empty string.
 
         Matches Rust ``TextForgeBuilderMethods::split_select``.
         """
-        return self._operation("sslt", _text(pattern, "pattern"), _number(index, "index"))
+        return self._operation("sslt", _text(pattern, "pattern"), _numeric(index, "index"))
 
-    def capitalize_chunk(self, start_index: int | Variable, end_index: int | Variable) -> Pipeline:
+    def capitalize_chunk(
+        self, start_index: int | str | Variable, end_index: int | str | Variable
+    ) -> Pipeline:
         """Capitalizes the substring between `start_index` and `end_index` (inclusive). Returns
         an error if the indices are invalid.
 
         Matches Rust ``TextForgeBuilderMethods::capitalize_chunk``.
         """
         return self._operation(
-            "ctc", _number(start_index, "start_index"), _number(end_index, "end_index")
+            "ctc", _numeric(start_index, "start_index"), _numeric(end_index, "end_index")
         )
 
-    def capitalize_range(self, start_index: int | Variable, end_index: int | Variable) -> Pipeline:
+    def capitalize_range(
+        self, start_index: int | str | Variable, end_index: int | str | Variable
+    ) -> Pipeline:
         """Capitalizes all characters in `input` from `start_index` (inclusive) to `end_index`
-        (exclusive). If the indices are invalid, an `TextForgeError` is returned at build-
-        time.
+        (exclusive). If the indices are invalid, an `TextForgeError` is returned at
+        build-time.
 
         Matches Rust ``TextForgeBuilderMethods::capitalize_range``.
         """
         return self._operation(
-            "ctr", _number(start_index, "start_index"), _number(end_index, "end_index")
+            "ctr", _numeric(start_index, "start_index"), _numeric(end_index, "end_index")
         )
 
-    def capitalize_single_word(self, index: int | Variable) -> Pipeline:
+    def capitalize_single_word(self, index: int | str | Variable) -> Pipeline:
         """Capitalizes the word located at the given `index` in `input`. Words are delimited
         according to Unicode whitespace rules.
 
         Matches Rust ``TextForgeBuilderMethods::capitalize_single_word``.
         """
-        return self._operation("cts", _number(index, "index"))
+        return self._operation("cts", _numeric(index, "index"))
 
     def to_url_encoded(self) -> Pipeline:
         """Converts the entire `input` string into its URL-encoded form according to RFC 3986
@@ -633,28 +647,28 @@ class Pipeline:
         """
         return self._operation("jsonu")
 
-    def insert(self, index: int | Variable, text_to_insert: str | Variable) -> Pipeline:
+    def insert(self, index: int | str | Variable, text_to_insert: str | Variable) -> Pipeline:
         """Inserts `text` after `index` of `string`
 
         Matches Rust ``TextForgeBuilderMethods::insert``.
         """
         return self._operation(
-            "ins", _number(index, "index"), _text(text_to_insert, "text_to_insert")
+            "ins", _numeric(index, "index"), _text(text_to_insert, "text_to_insert")
         )
 
-    def to_lowercase_word(self, index: int | Variable) -> Pipeline:
+    def to_lowercase_word(self, index: int | str | Variable) -> Pipeline:
         """Lowercases a single word of `string`
 
         Matches Rust ``TextForgeBuilderMethods::to_lowercase_word``.
         """
-        return self._operation("tlcw", _number(index, "index"))
+        return self._operation("tlcw", _numeric(index, "index"))
 
-    def to_uppercase_word(self, index: int | Variable) -> Pipeline:
+    def to_uppercase_word(self, index: int | str | Variable) -> Pipeline:
         """Uppercases a single word of `string`
 
         Matches Rust ``TextForgeBuilderMethods::to_uppercase_word``.
         """
-        return self._operation("tucw", _number(index, "index"))
+        return self._operation("tucw", _numeric(index, "index"))
 
     def join_to_kebab_case(self) -> Pipeline:
         """If `input` is a string whose words are separated by spaces, join `input` as a
@@ -688,21 +702,21 @@ class Pipeline:
         """
         return self._operation("jpsc")
 
-    def pad_left(self, text: str | Variable, times: int | Variable) -> Pipeline:
+    def pad_left(self, text: str | Variable, times: int | str | Variable) -> Pipeline:
         """Repeats `text` characters until `max_len` is reached, and then insert the result at
         the start of `input`
 
         Matches Rust ``TextForgeBuilderMethods::pad_left``.
         """
-        return self._operation("padl", _text(text, "text"), _number(times, "times"))
+        return self._operation("padl", _text(text, "text"), _numeric(times, "times"))
 
-    def pad_right(self, text: str | Variable, times: int | Variable) -> Pipeline:
+    def pad_right(self, text: str | Variable, times: int | str | Variable) -> Pipeline:
         """Repeats `text` characters until `max_len` is reached, and then insert the result at
         the end of `input`
 
         Matches Rust ``TextForgeBuilderMethods::pad_right``.
         """
-        return self._operation("padr", _text(text, "text"), _number(times, "times"))
+        return self._operation("padr", _text(text, "text"), _numeric(times, "times"))
 
     def remove_whitespace(self) -> Pipeline:
         """Removes all whitespaces in `input`
@@ -711,12 +725,12 @@ class Pipeline:
         """
         return self._operation("rmws")
 
-    def delete_single(self, index: int | Variable) -> Pipeline:
+    def delete_single(self, index: int | str | Variable) -> Pipeline:
         """Delete's a single character specified by `index` in `input`
 
         Matches Rust ``TextForgeBuilderMethods::delete_single``.
         """
-        return self._operation("dls", _number(index, "index"))
+        return self._operation("dls", _numeric(index, "index"))
 
     def extract_matches_joined(
         self, pattern: str | Variable, separator: str | Variable
@@ -743,35 +757,137 @@ class Pipeline:
         return self._operation("var", _text(var_name, "var_name"), _value(var_value, "var_value"))
 
     def mut_var(self, var_name: str | Variable, var_value: str | int | Variable) -> Pipeline:
-        """Assign a new value to a mutable execution-context variable.
+        """Change the mutable variable `var_name` (`mutv {name} = {value};`).
 
         Matches Rust ``TextForgeBuilderMethods::mut_var``.
         """
         return self._operation("mutv", _text(var_name, "var_name"), _value(var_value, "var_value"))
 
     def eval(self, expr: str | Variable, var_name: str | Variable) -> Pipeline:
-        """Evaluate an expression and store its result in the named variable.
+        """Evaluate `expr` and store the result in `var_name` (`eval {expression} in {name};`).
 
         Matches Rust ``TextForgeBuilderMethods::eval``.
         """
         return self._operation("eval", _text(expr, "expr"), _text(var_name, "var_name"))
 
-    def iter(self, times: int | Variable, inner: Pipeline | Instruction | Variable) -> Pipeline:
-        """Run one inner instruction repeatedly, using the Rust iter semantics.
+    def iter(
+        self, times: int | str | Variable, inner: Pipeline | Instruction | Variable
+    ) -> Pipeline:
+        """Run `inner` `times` times (`iter {times} times {instruction};`); `__COUNTER__` holds
+        the iteration, from 0.
 
         Matches Rust ``TextForgeBuilderMethods::iter``.
         """
-        return self._operation("iter", _number(times, "times"), _instruction(inner, "inner"))
+        return self._operation("iter", _numeric(times, "times"), _instruction(inner, "inner"))
+
+    def on_line(self, line: int | str | Variable, inner: Pipeline | Instruction) -> Pipeline:
+        """Apply one instruction to a single line (base 0). The instruction receives only the
+        line content, without its terminator, so its indices are relative to the line. The
+        terminator is preserved and the result may contain any number of lines. See
+        `docs/on-instructions.md`.
+
+        Matches Rust ``TextForgeBuilderMethods::on_line``.
+        """
+        return self._operation("onln", _numeric(line, "line"), _token(inner, "inner"))
+
+    def on_chunk(
+        self,
+        start_index: int | str | Variable,
+        end_index: int | str | Variable,
+        inner: Pipeline | Instruction,
+    ) -> Pipeline:
+        """Apply one instruction to characters `start..=end` (base 0). The instruction receives
+        only that chunk, so its indices are relative to it. An `end` past the last character
+        is clamped, as in `delete_chunk`.
+
+        Matches Rust ``TextForgeBuilderMethods::on_chunk``.
+        """
+        return self._operation(
+            "onck",
+            _numeric(start_index, "start_index"),
+            _numeric(end_index, "end_index"),
+            _token(inner, "inner"),
+        )
+
+    def on_line_interval(
+        self,
+        start_line: int | str | Variable,
+        end_line: int | str | Variable,
+        inner: Pipeline | Instruction,
+    ) -> Pipeline:
+        """Apply one instruction to lines `start..=end` (base 0) as one block. The block keeps
+        its inner terminators; the terminator of the last selected line is preserved outside
+        it. The result may change the line count.
+
+        Matches Rust ``TextForgeBuilderMethods::on_line_interval``.
+        """
+        return self._operation(
+            "onlni",
+            _numeric(start_line, "start_line"),
+            _numeric(end_line, "end_line"),
+            _token(inner, "inner"),
+        )
+
+    def try_ignore(self, inner: Pipeline | Instruction) -> Pipeline:
+        """Run one instruction and, if it fails, skip it (`tryi {instruction};`). When the
+        instruction fails, the pipeline continues with the text and the variables as they
+        were before it; a safety limit is never ignored. The debug methods show each ignored
+        error. See `Tryi`.
+
+        Matches Rust ``TextForgeBuilderMethods::try_ignore``.
+        """
+        return self._operation("tryi", _token(inner, "inner"))
+
+    def pipeline_join(self, path: str | Variable) -> Pipeline:
+        """Run a whole pipeline from another file (text or bytecode) on the current text, in a
+        new execution context, and continue with its result. The path is a literal, relative
+        to the working directory; the file is loaded when the pipeline is built. See `Ppjn`.
+
+        Matches Rust ``TextForgeBuilderMethods::pipeline_join``.
+        """
+        return self._operation("ppjn", _text(path, "path"))
+
+    def write_to_file(self, path: str | Variable) -> Pipeline:
+        """Write the current text to a file and keep it unchanged. The file is replaced
+        atomically; missing directories are an error. The path may use `{{ }}`/`[[ ]]`
+        interpolation. See `docs/file-instructions.md`.
+
+        Matches Rust ``TextForgeBuilderMethods::write_to_file``.
+        """
+        return self._operation("wtf", _text(path, "path"))
+
+    def append_file(self, path: str | Variable) -> Pipeline:
+        """Append the contents of a UTF-8 file to the end of the text.
+
+        Matches Rust ``TextForgeBuilderMethods::append_file``.
+        """
+        return self._operation("apf", _text(path, "path"))
+
+    def prepend_file(self, path: str | Variable) -> Pipeline:
+        """Prepend the contents of a UTF-8 file to the beginning of the text.
+
+        Matches Rust ``TextForgeBuilderMethods::prepend_file``.
+        """
+        return self._operation("ppf", _text(path, "path"))
+
+    def insert_file(self, index: int | str | Variable, path: str | Variable) -> Pipeline:
+        """Insert the contents of a UTF-8 file at the start (index 0) or after the character at
+        `index` (base 0), with the index rules and the argument order of `insert`. Up to
+        0.3.1 the arguments were `(path, index)`.
+
+        Matches Rust ``TextForgeBuilderMethods::insert_file``.
+        """
+        return self._operation("inf", _numeric(index, "index"), _text(path, "path"))
 
     def remove_pattern(self, pattern: str | Variable) -> Pipeline:
-        """Remove every match of the pattern from the input.
+        """Remove every match of the regular expression `pattern`.
 
         Matches Rust ``TextForgeBuilderMethods::remove_pattern``.
         """
         return self._operation("rmp", _text(pattern, "pattern"))
 
     def end(self) -> Pipeline:
-        """End the current logical group, subject to core structural validation.
+        """Stop the pipeline here (inside a block or loop, stop that block or loop).
 
         Matches Rust ``TextForgeBuilderMethods::end``.
         """

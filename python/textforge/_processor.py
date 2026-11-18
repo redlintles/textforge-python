@@ -16,6 +16,7 @@ from ._buffers import BufferOptions, PortableBuffer
 from ._native import Instruction, TextForgeError
 from ._observers import Observers
 from ._paths import Path, _path
+from ._profiles import ExecutionProfile
 
 
 class BatchPool:
@@ -98,6 +99,35 @@ class Processor:
     def register(self, plan: _api.Pipeline) -> str:
         """Validate and register a snapshot; the source plan stays reusable."""
         return self._inner.register(plan._lower())
+
+    def set_profile(self, profile: ExecutionProfile) -> None:
+        """Set engine resources and safety limits for later runs; results never change.
+
+        >>> processor = Processor()
+        >>> processor.set_profile(ExecutionProfile.fast())
+        >>> processor.profile() == ExecutionProfile.fast()
+        True
+        """
+        if not isinstance(profile, ExecutionProfile):
+            raise TypeError("profile must be an ExecutionProfile")
+        self._inner.set_profile(
+            profile.spool_threshold, profile.max_generated_bytes, profile.max_iterations
+        )
+
+    def profile(self) -> ExecutionProfile:
+        """Return the current profile (``ExecutionProfile.balanced()`` by default)."""
+        return ExecutionProfile(*self._inner.profile())
+
+    def set_pipeline_name(self, id: str, name: str) -> None:
+        """Set the name a registered pipeline reads as ``{{__PIPELINE_NAME__}}``.
+
+        A pipeline is named after its identifier, or after its file when read from one.
+        """
+        self._inner.set_pipeline_name(id, name)
+
+    def pipeline_name(self, id: str) -> str:
+        """Return the name a registered pipeline reads as ``__PIPELINE_NAME__``."""
+        return self._inner.pipeline_name(id)
 
     def remove_transform(self, id: str) -> None:
         """Remove an identifier; missing identifiers raise TextForgeError."""

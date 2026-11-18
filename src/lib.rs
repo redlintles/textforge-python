@@ -31,12 +31,130 @@ fn error(py: Python<'_>, error: BindingError) -> PyErr {
         value.setattr("message", error.message)?;
         value.setattr("instruction", error.instruction)?;
         value.setattr("input", error.input)?;
+        let details = *error.details;
+        value.setattr("kind", details.kind)?;
+        let trace = details
+            .trace
+            .into_iter()
+            .map(|frame| {
+                Py::new(
+                    py,
+                    TraceFrame {
+                        instruction: frame.instruction,
+                        location: frame.location,
+                        note: frame.note,
+                    },
+                )
+            })
+            .collect::<PyResult<Vec<_>>>()?;
+        value.setattr("trace", PyTuple::new(py, trace)?)?;
+        let parameters = details
+            .parameters
+            .into_iter()
+            .map(|parameter| {
+                Py::new(
+                    py,
+                    ErrorParameter {
+                        name: parameter.name,
+                        value: parameter.value,
+                        written: parameter.written,
+                    },
+                )
+            })
+            .collect::<PyResult<Vec<_>>>()?;
+        value.setattr("parameters", PyTuple::new(py, parameters)?)?;
+        value.setattr("cause", details.cause)?;
+        value.setattr("hint", details.hint)?;
+        value.setattr("ignorable", details.ignorable)?;
+        value.setattr("report", details.report)?;
         Ok(())
     })();
     match attributes {
         Ok(()) => exception,
         Err(error) => error,
     }
+}
+
+/// One instruction an error left, outermost first (`TextForgeError.trace`).
+///
+/// Python example: `error.trace[-1].instruction` is the instruction that failed.
+#[pyclass(name = "TraceFrame", module = "textforge", frozen, eq, get_all)]
+#[derive(Clone, PartialEq, Eq)]
+struct TraceFrame {
+    instruction: String,
+    location: Option<String>,
+    note: Option<String>,
+}
+#[pymethods]
+impl TraceFrame {
+    #[new]
+    #[pyo3(signature = (instruction, location=None, note=None))]
+    fn new(instruction: String, location: Option<String>, note: Option<String>) -> Self {
+        Self {
+            instruction,
+            location,
+            note,
+        }
+    }
+    fn __getnewargs__(&self) -> (String, Option<String>, Option<String>) {
+        (
+            self.instruction.clone(),
+            self.location.clone(),
+            self.note.clone(),
+        )
+    }
+    fn __repr__(&self, py: Python<'_>) -> PyResult<String> {
+        Ok(format!(
+            "TraceFrame(instruction={}, location={}, note={})",
+            text_repr(py, &self.instruction)?,
+            optional_repr(py, &self.location)?,
+            optional_repr(py, &self.note)?
+        ))
+    }
+}
+
+/// One parameter of the failing instruction (`TextForgeError.parameters`).
+///
+/// Python example: `error.parameters[0].name == "index"`.
+#[pyclass(name = "ErrorParameter", module = "textforge", frozen, eq, get_all)]
+#[derive(Clone, PartialEq, Eq)]
+struct ErrorParameter {
+    name: String,
+    value: String,
+    written: Option<String>,
+}
+#[pymethods]
+impl ErrorParameter {
+    #[new]
+    #[pyo3(signature = (name, value, written=None))]
+    fn new(name: String, value: String, written: Option<String>) -> Self {
+        Self {
+            name,
+            value,
+            written,
+        }
+    }
+    fn __getnewargs__(&self) -> (String, String, Option<String>) {
+        (self.name.clone(), self.value.clone(), self.written.clone())
+    }
+    fn __repr__(&self, py: Python<'_>) -> PyResult<String> {
+        Ok(format!(
+            "ErrorParameter(name={}, value={}, written={})",
+            text_repr(py, &self.name)?,
+            text_repr(py, &self.value)?,
+            optional_repr(py, &self.written)?
+        ))
+    }
+}
+
+fn text_repr(py: Python<'_>, text: &str) -> PyResult<String> {
+    Ok(PyString::new(py, text).repr()?.to_string())
+}
+
+fn optional_repr(py: Python<'_>, value: &Option<String>) -> PyResult<String> {
+    value
+        .as_deref()
+        .map_or_else(|| Ok("None".to_owned()), |text| text_repr(py, text))
 }
 
 /// Explicit execution-context reference; Python example: `Variable("name")`.
@@ -221,6 +339,8 @@ impl CompiledPipeline {
 #[pymodule]
 fn _native(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<Variable>()?;
+    module.add_class::<TraceFrame>()?;
+    module.add_class::<ErrorParameter>()?;
     module.add_class::<Instruction>()?;
     module.add_class::<Plan>()?;
     module.add_class::<CompiledPipeline>()?;
@@ -233,6 +353,7 @@ fn _native(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<observers::Observation>()?;
     module.add_class::<observers::Observers>()?;
     module.add_function(wrap_pyfunction!(paths::features, module)?)?;
+    module.add_function(wrap_pyfunction!(processor::profile_preset, module)?)?;
     let exception_type = module.py().get_type::<TextForgeError>();
     exception_type.setattr("__module__", "textforge")?;
     module.add("TextForgeError", exception_type)?;
